@@ -16,6 +16,7 @@ class DevicePane(VerticalScroll):
         self.border_title = "Devices"
 
 
+
 class MessagesPane(VerticalScroll):
 
     def on_mount(self):

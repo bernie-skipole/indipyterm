@@ -36,8 +36,6 @@ class _Connection:
         # rxque giving received data
         self.rxque = queue.Queue(maxsize=4)
 
-        self.devicenames = []
-
         self.snapshot = None
         self.queclient = None
         self.clientthread = None
@@ -52,6 +50,7 @@ class _Connection:
             self.make_connection(host, port, blobfolder)
 
         self.startsc = None
+        self.screens = {}  # devicename:screen dictionary
 
 
     def checkhostport(self, hostport):
@@ -109,7 +108,7 @@ class _Connection:
             # new device, add a button to the left pane
             left_pane = self.startsc.query_one("#left-pane")
             left_pane.remove_children("#no-devices")
-            left_pane.mount(Button(item.devicename, variant="primary"))
+            left_pane.mount(Button(item.devicename, name=item.devicename, variant="primary", classes="devices"))
 
         self.snapshot = snapshot
 
@@ -135,9 +134,10 @@ class _Connection:
 
 
     def clear_devices(self):
+        self.screens.clear()
         left_pane = self.startsc.query_one("#left-pane")
-        if left_pane.query(Button):
-            left_pane.remove_children(Button)
+        if left_pane.query(".devices"):
+            left_pane.remove_children(".devices")
             left_pane.mount(Static("No Devices found", id="no-devices"))
 
 

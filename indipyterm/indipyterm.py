@@ -3,6 +3,7 @@ import asyncio, queue, threading
 
 from typing import Iterable
 
+from textual import on
 from textual.app import App, ComposeResult, SystemCommand
 from textual.widgets import Footer, Static, Button
 from textual.reactive import reactive
@@ -12,6 +13,7 @@ from textual.containers import Container, Horizontal, VerticalScroll
 from .connections import get_connection
 
 from .startsc import StartSc
+from .devicesc import DeviceSc
 
 
 
@@ -45,3 +47,25 @@ class IPyTerm(App):
         self.theme = (
             "textual-dark" if self.theme == "textual-light" else "textual-light"
             )
+
+
+    @on(Button.Pressed, ".devices")
+    def choose_device(self, event):
+        "Each device button has name devicename"
+        devicename = event.button.name
+        if not devicename:
+            return
+        CONNECTION = get_connection()
+        if not CONNECTION.snapshot:
+            return
+        if devicename not in CONNECTION.snapshot:
+            # An unknown device
+            return
+        if not CONNECTION.snapshot[devicename].enable:
+            # This device is disabled
+            return
+        if devicename not in CONNECTION.screens:
+            devicescreen = DeviceSc()
+            self.install_screen(devicescreen, name=devicename)
+            CONNECTION.screens[devicename] = devicescreen
+        self.push_screen(devicename)
