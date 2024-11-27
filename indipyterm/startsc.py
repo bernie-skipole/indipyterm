@@ -1,11 +1,12 @@
 
 from typing import Iterable
 
+from textual import on
 from textual.app import App, ComposeResult, SystemCommand
 from textual.widgets import Footer, Static, Button, Log, Input
 from textual.reactive import reactive
 from textual.screen import Screen
-from textual.containers import Container, Horizontal, VerticalScroll, Center
+from textual.containers import Container, HorizontalScroll, VerticalScroll, Center
 
 from .connections import get_connection
 
@@ -14,6 +15,29 @@ class DevicePane(VerticalScroll):
 
     def on_mount(self):
         self.border_title = "Devices"
+
+    @on(Button.Pressed, ".devices")
+    def choose_device(self, event):
+        "Each device button has name devicename"
+        devicename = event.button.name
+        if not devicename:
+            return
+        CONNECTION = get_connection()
+        if not CONNECTION.snapshot:
+            return
+        if devicename not in CONNECTION.snapshot:
+            # An unknown device
+            return
+        if not CONNECTION.snapshot[devicename].enable:
+            # This device is disabled
+            return
+        self.app.push_screen("devicesc")
+
+
+class BlobPane(HorizontalScroll):
+
+    def on_mount(self):
+        self.border_title = "Set BLOB folder"
 
 
 
@@ -67,6 +91,20 @@ class ConInput(Input):
         self.clear()
         self.insert_text_at_cursor(hostport)
 
+class BlobInput(Input):
+
+    def on_blur(self, event):
+        CONNECTION = get_connection()
+        blobfolder = CONNECTION.checkblobfolder(self.value)
+        self.clear()
+        self.insert_text_at_cursor(blobfolder)
+
+    def on_submitted(self, event):
+        CONNECTION = get_connection()
+        blobfolder = CONNECTION.checkblobfolder(self.value)
+        self.clear()
+        self.insert_text_at_cursor(blobfolder)
+
 
 
 
@@ -81,18 +119,14 @@ class StartSc(Screen):
         yield Static("INDI Terminal", id="title")
         yield Footer()
         with Container(id="startsc-grid"):
-            with DevicePane(id="left-pane"):
+            with DevicePane(id="device-pane"):
                 yield Static("No Devices found", id="no-devices")
-            with ConnectionPane(id="top-right"):
+            with ConnectionPane(id="con-pane"):
                 yield ConInput(placeholder="Host:Port", id="con-input")
                 yield Static("Host:Port not set", id="con-status")
                 with Center():
                     yield Button("Connect", id="con-button")
-            with Container(id="bottom-right"):
-                yield Static("This")
-                yield Static("panel")
-                yield Static("is")
-                yield Static("using")
-                yield Static("grid layout!", id="bottom-right-final")
-            with MessagesPane(id="bottom"):
+            with BlobPane(id="blob-pane"):
+                yield BlobInput(placeholder="Set a Folder to receive BLOBs", id="blob-input")
+            with MessagesPane(id="messages-pane"):
                 yield Log(id="system-messages")

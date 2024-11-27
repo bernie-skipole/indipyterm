@@ -8,7 +8,7 @@ from textual.app import App, ComposeResult, SystemCommand
 from textual.widgets import Footer, Static, Button
 from textual.reactive import reactive
 from textual.screen import Screen
-from textual.containers import Container, Horizontal, VerticalScroll
+from textual.containers import Container, VerticalScroll
 
 from indipyclient.queclient import QueClient
 
@@ -49,8 +49,10 @@ class _Connection:
             self.hostport = f"{host}:{port}"
             self.make_connection(host, port, blobfolder)
 
+        # these are filled in as the app is mounted
+        self.app = None
         self.startsc = None
-        self.screens = {}  # devicename:screen dictionary
+        self.devicesc = None
 
 
     def checkhostport(self, hostport):
@@ -78,6 +80,16 @@ class _Connection:
         self.hostport = f"{host}:{port}"
         return self.hostport
 
+
+    def checkblobfolder(self, blobfolder):
+        """Given a folder, sets self.blobfolder"""
+        self.blobfolderpath = pathlib.Path(blobfolder).expanduser().resolve()
+        if not self.blobfolderpath.is_dir():
+            self.blobfolderpath = None
+            return "Invalid Folder"
+        return str(self.blobfolderpath)
+
+
     def check_rxque(self) -> None:
         """Method to handle received data."""
         try:
@@ -102,13 +114,15 @@ class _Connection:
         if not snapshot.connected:
             # the connection is disconnected
             self.clear_devices()
+            if not self.startsc.is_active:
+                self.app.push_screen('startsc')
             return
 
         if (item.eventtype == "Define" or item.eventtype == "DefineBLOB") and ((self.snapshot is None) or (item.devicename not in self.snapshot)):
-            # new device, add a button to the left pane
-            left_pane = self.startsc.query_one("#left-pane")
-            left_pane.remove_children("#no-devices")
-            left_pane.mount(Button(item.devicename, name=item.devicename, variant="primary", classes="devices"))
+            # new device, add a button to the device pane
+            device_pane = self.startsc.query_one("#device-pane")
+            device_pane.remove_children("#no-devices")
+            device_pane.mount(Button(item.devicename, name=item.devicename, variant="primary", classes="devices"))
 
         self.snapshot = snapshot
 
@@ -134,11 +148,10 @@ class _Connection:
 
 
     def clear_devices(self):
-        self.screens.clear()
-        left_pane = self.startsc.query_one("#left-pane")
-        if left_pane.query(".devices"):
-            left_pane.remove_children(".devices")
-            left_pane.mount(Static("No Devices found", id="no-devices"))
+        device_pane = self.startsc.query_one("#device-pane")
+        if device_pane.query(".devices"):
+            device_pane.remove_children(".devices")
+            device_pane.mount(Static("No Devices found", id="no-devices"))
 
 
 
@@ -198,8 +211,10 @@ class _Connection:
 #########################################################################
 
 def make_connection():
+    "Creates a singleton _Connection object"
     global CONNECTION
-    CONNECTION = _Connection(host='localhost', port=7624, blobfolder=None)
+    if CONNECTION is None:
+        CONNECTION = _Connection(host='localhost', port=7624, blobfolder=None)
 
 def get_connection():
     return CONNECTION

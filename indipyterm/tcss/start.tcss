@@ -15,14 +15,14 @@ StartSc {
             grid-rows: 2fr 1fr 1fr;
         }
 
-        #left-pane > Static {
+        #device-pane > Static {
             background: $boost;
             color: auto;
             margin-bottom: 1;
             padding: 1;
         }
 
-        #left-pane {
+        #device-pane {
             width: 100%;
             height: 100%;
             row-span: 2;
@@ -33,39 +33,25 @@ StartSc {
              }
         }
 
-        #top-right {
+        #con-pane {
             height: 100%;
             background: $panel;
             border: mediumvioletred;
             align: center middle;
         }
 
-        #top-right > Static {
+        #con-pane > Static {
             margin: 1;
             background: $boost;
         }
 
-        #bottom-right {
+        #blob-pane {
             height: 100%;
-            layout: grid;
-            grid-size: 3;
-            grid-columns: 1fr;
-            grid-rows: 1fr;
-            grid-gutter: 1;
             background: $panel;
             border: greenyellow;
         }
 
-        #bottom-right-final {
-            column-span: 2;
-        }
-
-        #bottom-right > Static {
-            height: 100%;
-            background: $boost;
-        }
-
-        #bottom {
+        #messages-pane {
             width: 100%;
             height: 100%;
             column-span: 2;
