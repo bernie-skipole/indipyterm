@@ -82,12 +82,40 @@ class _Connection:
 
 
     def checkblobfolder(self, blobfolder):
-        """Given a folder, sets self.blobfolder"""
-        self.blobfolderpath = pathlib.Path(blobfolder).expanduser().resolve()
-        if not self.blobfolderpath.is_dir():
-            self.blobfolderpath = None
+        """Given a folder, checks it, sets blobfolder, and returns the folder string
+           If the given folder is empty, removes the blobfolder
+           If the given folder is not a directory, removes the blobfolder and returns
+           Invalid Folder"""
+        if not blobfolder:
+            self.set_BLOBfolder(None)
+            return ""
+        blobfolder = pathlib.Path(blobfolder).expanduser().resolve()
+        if not blobfolder.is_dir():
+            self.set_BLOBfolder(None)
             return "Invalid Folder"
-        return str(self.blobfolderpath)
+        self.set_BLOBfolder(blobfolder)
+        return str(blobfolder)
+
+
+    def set_BLOBfolder(self, blobfolder):
+        "Sets blofolder into queclient"
+        self.blobfolderpath = blobfolder
+        if not CONNECTION.is_alive():
+            return
+        self.queclient.clientdata['blobfolder'] = self.blobfolderpath
+        if not self.snapshot:
+            return
+        for devicename in self.snapshot:
+            for vectorname,vector in self.snapshot[devicename].items():
+                if vector.vectortype != "BLOBVector":
+                    continue
+                if vector.perm == 'wo':
+                    continue
+                # so its a BLOBVector, either ro or rw
+                if self.blobfolderpath:
+                    self.txque.put( (devicename, vectorname, "Also") )
+                else:
+                    self.txque.put( (devicename, vectorname, "Never") )
 
 
     def check_rxque(self) -> None:
@@ -124,12 +152,19 @@ class _Connection:
             device_pane.remove_children("#no-devices")
             device_pane.mount(Button(item.devicename, name=item.devicename, variant="primary", classes="devices"))
 
+        if item.eventtype == "DefineBLOB" and (item.snapshot[item.devicename][item.vectorname].perm != 'wo'):
+            # A BLOB vector is defined in which the server can send BLOBs,
+            # enable or disable it depending on if self.blobfolderpath is defined
+            if self.blobfolderpath:
+                self.txque.put( (item.devicename, item.vectorname, "Also") )
+            else:
+                self.txque.put( (item.devicename, item.vectorname, "Never") )
         self.snapshot = snapshot
 
 
     def connect(self):
         host,port = self.hostport.split(":")
-        self.make_connection(host, port)
+        self.make_connection(host, port, self.blobfolderpath)
 
     def disconnect(self):
         if CONNECTION.is_alive():

@@ -38,7 +38,11 @@ class BlobPane(HorizontalScroll):
 
     def on_mount(self):
         self.border_title = "Set BLOB folder"
-
+        CONNECTION = get_connection()
+        if CONNECTION.blobfolderpath:
+            self.border_subtitle = "Recieved BLOBs enabled"
+        else:
+            self.border_subtitle = "Recieved BLOBs disabled"
 
 
 class MessagesPane(VerticalScroll):
@@ -85,11 +89,10 @@ class ConInput(Input):
         self.clear()
         self.insert_text_at_cursor(hostport)
 
-    def on_submitted(self, event):
-        CONNECTION = get_connection()
-        hostport = CONNECTION.checkhostport(self.value)
-        self.clear()
-        self.insert_text_at_cursor(hostport)
+    def action_submit(self):
+        self.screen.focus_next('*')
+
+
 
 class BlobInput(Input):
 
@@ -98,12 +101,13 @@ class BlobInput(Input):
         blobfolder = CONNECTION.checkblobfolder(self.value)
         self.clear()
         self.insert_text_at_cursor(blobfolder)
+        if CONNECTION.blobfolderpath:
+            self.parent.border_subtitle = "Recieved BLOBs enabled"
+        else:
+            self.parent.border_subtitle = "Recieved BLOBs disabled"
 
-    def on_submitted(self, event):
-        CONNECTION = get_connection()
-        blobfolder = CONNECTION.checkblobfolder(self.value)
-        self.clear()
-        self.insert_text_at_cursor(blobfolder)
+    def action_submit(self):
+        self.screen.focus_next('*')
 
 
 
