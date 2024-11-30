@@ -20,9 +20,18 @@ class DeviceSc(Screen):
     BINDINGS = [("m", "main", "Main Screen")]
 
     def compose(self) -> ComposeResult:
-        yield Static("Device", id="title")
+        CONNECTION = get_connection()
+        yield Static(CONNECTION.devicename, id="title")
         yield Footer()
+        with Container():
+            with VerticalScroll(id="messages-pane"):
+                yield Log(id="device-messages")
+
+
+
 
     def action_main(self) -> None:
         """Event handler called when m pressed."""
+        CONNECTION = get_connection()
+        CONNECTION.devicename = None
         self.app.push_screen('startsc')

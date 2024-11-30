@@ -54,6 +54,9 @@ class _Connection:
         self.startsc = None
         self.devicesc = None
 
+        # This is set when a device is chosen
+        self.devicename = None
+
 
     def checkhostport(self, hostport):
         """Given a hostport string, Checks it and sets self.hostport
@@ -128,6 +131,7 @@ class _Connection:
 
         if not (self.host) or (not self.port):
             self.snapshot = None
+            self.devicename = None
             return
 
         snapshot = item.snapshot
@@ -138,6 +142,17 @@ class _Connection:
             messages = snapshot.messages
             mlist = reversed([ localtimestring(t) + "  " + m for t,m in messages ])
             log.write_lines(mlist)
+
+        if self.devicename:
+            if item.eventtype == "Message" and item.devicename and (not item.vectorname):
+                log = self.devicesc.query_one("#device-messages")
+                log.clear()
+                messages = snapshot[self.devicename].messages
+                mlist = reversed([ localtimestring(t) + "  " + m for t,m in messages ])
+                if len(mlist) > 3:
+                    log.write_lines(mlist[0:3])
+                else:
+                    log.write_lines(mlist)
 
         if not snapshot.connected:
             # the connection is disconnected
@@ -183,6 +198,7 @@ class _Connection:
 
 
     def clear_devices(self):
+        self.devicename = None
         device_pane = self.startsc.query_one("#device-pane")
         if device_pane.query(".devices"):
             device_pane.remove_children(".devices")
@@ -237,6 +253,7 @@ class _Connection:
         self.queclient = None
         self.clientthread = None
         self.snapshot = None
+        self.devicename = None
 
 
 #########################################################################

@@ -31,6 +31,7 @@ class DevicePane(VerticalScroll):
         if not CONNECTION.snapshot[devicename].enable:
             # This device is disabled
             return
+        CONNECTION.devicename = devicename
         self.app.push_screen("devicesc")
 
 
