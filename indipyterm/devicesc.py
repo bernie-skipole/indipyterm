@@ -10,6 +10,12 @@ from textual.containers import Container, Horizontal, VerticalScroll, Center
 from .connections import get_connection
 
 
+class MessagesPane(VerticalScroll):
+
+    def on_mount(self):
+        self.border_title = "Device Messages"
+
+
 class DeviceSc(Screen):
     """The class defining the device screen."""
 
@@ -24,10 +30,8 @@ class DeviceSc(Screen):
         yield Static(CONNECTION.devicename, id="title")
         yield Footer()
         with Container():
-            with VerticalScroll(id="messages-pane"):
+            with MessagesPane(id="dev-messages-pane"):
                 yield Log(id="device-messages")
-
-
 
 
     def action_main(self) -> None:

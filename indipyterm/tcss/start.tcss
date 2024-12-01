@@ -51,7 +51,7 @@ StartSc {
             border: greenyellow;
         }
 
-        #messages-pane {
+        #sys-messages-pane {
             width: 100%;
             height: 100%;
             column-span: 2;
@@ -60,6 +60,26 @@ StartSc {
         }
 
         #system-messages {
+            width: 100%;
+            height: 100%;
+            background: $panel;
+            scrollbar-background: $panel;
+            scrollbar-corner-color: $panel;
+        }
+    }
+
+
+DeviceSc {
+
+        #dev-messages-pane {
+            width: 100%;
+            height: 100%;
+            column-span: 2;
+            background: $panel;
+            border: mediumvioletred;
+        }
+
+        #device-messages {
             width: 100%;
             height: 100%;
             background: $panel;

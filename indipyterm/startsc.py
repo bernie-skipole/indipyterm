@@ -133,5 +133,5 @@ class StartSc(Screen):
                     yield Button("Connect", id="con-button")
             with BlobPane(id="blob-pane"):
                 yield BlobInput(placeholder="Set a Folder to receive BLOBs", id="blob-input")
-            with MessagesPane(id="messages-pane"):
+            with MessagesPane(id="sys-messages-pane"):
                 yield Log(id="system-messages")
