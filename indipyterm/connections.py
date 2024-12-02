@@ -12,10 +12,62 @@ from textual.containers import Container, VerticalScroll
 
 from indipyclient.queclient import QueClient
 
-CONNECTION = None
-
 logger = logging.getLogger()
 logger.addHandler(logging.NullHandler())
+
+
+#########################################################################
+#
+# Global variable _DEVICENAME will be the name of the device
+# being displayed
+#
+#########################################################################
+
+_DEVICENAME = ''
+
+def get_devicename():
+    return _DEVICENAME
+
+def set_devicename(devicename):
+    global _DEVICENAME
+    _DEVICENAME = devicename
+
+
+def get_devicemessages(devicename=None):
+    "Returns a list of messages for the device"
+    if devicename is None:
+        devicename = get_devicename()
+    if not devicename:
+        return
+    connection = get_connection()
+    snapshot = connection.snapshot
+    if not snapshot:
+        return
+    if devicename not in snapshot:
+        return
+    messages = snapshot[devicename].messages
+    if not messages:
+        return
+    return reversed([ localtimestring(t) + "  " + m for t,m in messages])
+
+
+
+##########################################################################
+#
+# Global variable _CONNECTION will be an instance of the _Connection class
+#
+##########################################################################
+
+_CONNECTION = None
+
+def make_connection():
+    "Creates a singleton _Connection object"
+    global _CONNECTION
+    if _CONNECTION is None:
+        _CONNECTION = _Connection(host='localhost', port=7624, blobfolder=None)
+
+def get_connection():
+    return _CONNECTION
 
 
 def localtimestring(t):
@@ -53,9 +105,6 @@ class _Connection:
         self.app = None
         self.startsc = None
         self.devicesc = None
-
-        # This is set when a device is chosen
-        self.devicename = None
 
 
     def checkhostport(self, hostport):
@@ -131,7 +180,6 @@ class _Connection:
 
         if not (self.host) or (not self.port):
             self.snapshot = None
-            self.devicename = None
             return
 
         snapshot = item.snapshot
@@ -143,15 +191,14 @@ class _Connection:
             mlist = reversed([ localtimestring(t) + "  " + m for t,m in messages ])
             log.write_lines(mlist)
 
-        if self.devicename:
-            if item.eventtype == "Message" and item.devicename and (not item.vectorname):
-                log = self.devicesc.query_one("#device-messages")
-                log.clear()
-                messages = snapshot[self.devicename].messages
-                mlist = reversed([ localtimestring(t) + "  " + m for t,m in messages ])
-                if len(mlist) > 3:
-                    log.write_lines(mlist[0:3])
-                else:
+        devicename = get_devicename()
+        if devicename:
+            if item.eventtype == "Message" and (item.devicename == devicename) and (not item.vectorname):
+                messages = snapshot[devicename].messages
+                if messages:
+                    log = self.devicesc.query_one("#device-messages")
+                    log.clear()
+                    mlist = reversed([ localtimestring(t) + "  " + m for t,m in messages ])
                     log.write_lines(mlist)
 
         if not snapshot.connected:
@@ -198,7 +245,6 @@ class _Connection:
 
 
     def clear_devices(self):
-        self.devicename = None
         device_pane = self.startsc.query_one("#device-pane")
         if device_pane.query(".devices"):
             device_pane.remove_children(".devices")
@@ -253,20 +299,3 @@ class _Connection:
         self.queclient = None
         self.clientthread = None
         self.snapshot = None
-        self.devicename = None
-
-
-#########################################################################
-#
-# Global variable CONNECTION will be an instance of the _Connection class
-#
-#########################################################################
-
-def make_connection():
-    "Creates a singleton _Connection object"
-    global CONNECTION
-    if CONNECTION is None:
-        CONNECTION = _Connection(host='localhost', port=7624, blobfolder=None)
-
-def get_connection():
-    return CONNECTION

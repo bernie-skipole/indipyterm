@@ -8,7 +8,7 @@ from textual.reactive import reactive
 from textual.screen import Screen
 from textual.containers import Container, HorizontalScroll, VerticalScroll, Center
 
-from .connections import get_connection
+from .connections import get_connection, get_devicename, set_devicename
 
 
 class DevicePane(VerticalScroll):
@@ -31,8 +31,14 @@ class DevicePane(VerticalScroll):
         if not CONNECTION.snapshot[devicename].enable:
             # This device is disabled
             return
-        CONNECTION.devicename = devicename
+        set_devicename(devicename)
+        devicesc = self.app.get_screen("devicesc")
+        devicesc.devicename = devicename
         self.app.push_screen("devicesc")
+
+
+
+
 
 
 class BlobPane(HorizontalScroll):
