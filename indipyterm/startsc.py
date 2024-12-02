@@ -37,10 +37,6 @@ class DevicePane(VerticalScroll):
         self.app.push_screen("devicesc")
 
 
-
-
-
-
 class BlobPane(HorizontalScroll):
 
     def on_mount(self):

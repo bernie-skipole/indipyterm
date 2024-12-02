@@ -8,6 +8,7 @@ from textual.screen import Screen
 from textual.containers import Container, Horizontal, VerticalScroll, Center
 
 from .connections import get_connection, get_devicename, get_devicemessages
+from .grouppn import GroupPane
 
 
 class DevHead(Static):
@@ -40,21 +41,6 @@ class MessagesPane(VerticalScroll):
 
     def on_mount(self):
         self.border_title = "Device Messages"
-
-
-class GroupPane(VerticalScroll):
-
-    devicename = reactive(get_devicename)
-
-    def on_mount(self):
-        self.border_title = "Device Group"
-
-    def compose(self):
-        with TabbedContent():
-            with TabPane("HELLO"):
-                yield Static("HELLO")  # First tab
-            with TabPane("GOODBYE"):
-                yield Static("GOODBYE")
 
 
 
