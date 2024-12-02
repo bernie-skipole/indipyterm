@@ -10,6 +10,21 @@ from textual.containers import Container, Horizontal, VerticalScroll, Center
 from .connections import get_connection, get_devicename, get_devicemessages, get_devicegroups
 
 
+class GroupTabPane(TabPane):
+
+    devicename = reactive(get_devicename)
+
+    def compose(self):
+        "For every vector draw it"
+        snapshot = get_connection().snapshot
+        for vector in snapshot[self.devicename].values():
+            if vector.group == self.name:
+                yield Static(vector.label)
+                for membervalue in vector.values():
+                    yield Static(membervalue)
+
+
+
 
 class GroupPane(VerticalScroll):
 
@@ -19,5 +34,4 @@ class GroupPane(VerticalScroll):
         grouplist = get_devicegroups(self.devicename)
         with TabbedContent():
             for group in grouplist:
-                with TabPane(group):
-                    yield Static(self.devicename)
+                yield GroupTabPane(group, name=group).data_bind(GroupPane.devicename)
