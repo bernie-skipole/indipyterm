@@ -29,7 +29,7 @@ class MessageLog(Log):
         if mlist:
             self.write_lines(mlist)
         else:
-            self.write(f"Messages for {devicename} will appear here")
+            self.write(f"Messages from {devicename} will appear here")
 
 
 class MessagesPane(VerticalScroll):

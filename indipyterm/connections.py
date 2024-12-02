@@ -51,6 +51,27 @@ def get_devicemessages(devicename=None):
     return reversed([ localtimestring(t) + "  " + m for t,m in messages])
 
 
+def get_devicegroups(devicename=None):
+    "Returns a list of groups for the device"
+    if devicename is None:
+        devicename = get_devicename()
+    if not devicename:
+        return
+    connection = get_connection()
+    snapshot = connection.snapshot
+    if not snapshot:
+        return
+    if devicename not in snapshot:
+        return
+    device = snapshot[devicename]
+    groupset = set(vector.group for vector in device.values())
+    if not groupset:
+        return
+    grouplist = list(groupset)
+    grouplist.sort()
+    return grouplist
+
+
 
 ##########################################################################
 #

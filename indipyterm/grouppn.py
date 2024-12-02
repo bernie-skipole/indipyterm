@@ -7,22 +7,17 @@ from textual.reactive import reactive
 from textual.screen import Screen
 from textual.containers import Container, Horizontal, VerticalScroll, Center
 
-from .connections import get_connection, get_devicename, get_devicemessages
-
-
+from .connections import get_connection, get_devicename, get_devicemessages, get_devicegroups
 
 
 
 class GroupPane(VerticalScroll):
 
-    devicename = reactive(get_devicename)
-
-    def on_mount(self):
-        self.border_title = "Device Group"
+    devicename = reactive(get_devicename, recompose=True)
 
     def compose(self):
+        grouplist = get_devicegroups(self.devicename)
         with TabbedContent():
-            with TabPane("HELLO"):
-                yield Static("HELLO")  # First tab
-            with TabPane("GOODBYE"):
-                yield Static("GOODBYE")
+            for group in grouplist:
+                with TabPane(group):
+                    yield Static(self.devicename)
