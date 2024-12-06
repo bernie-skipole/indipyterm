@@ -43,9 +43,9 @@ class BlobPane(HorizontalScroll):
         self.border_title = "Set BLOB folder"
         CONNECTION = get_connection()
         if CONNECTION.blobfolderpath:
-            self.border_subtitle = "Recieved BLOBs enabled"
+            self.border_subtitle = "Received BLOBs enabled"
         else:
-            self.border_subtitle = "Recieved BLOBs disabled"
+            self.border_subtitle = "Received BLOBs disabled"
 
 
 class MessagesPane(VerticalScroll):
@@ -105,9 +105,9 @@ class BlobInput(Input):
         self.clear()
         self.insert_text_at_cursor(blobfolder)
         if CONNECTION.blobfolderpath:
-            self.parent.border_subtitle = "Recieved BLOBs enabled"
+            self.parent.border_subtitle = "Received BLOBs enabled"
         else:
-            self.parent.border_subtitle = "Recieved BLOBs disabled"
+            self.parent.border_subtitle = "Received BLOBs disabled"
 
     def action_submit(self):
         self.screen.focus_next('*')
