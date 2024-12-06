@@ -173,22 +173,11 @@ class _Connection:
     def set_BLOBfolder(self, blobfolder):
         "Sets blofolder into queclient"
         self.blobfolderpath = blobfolder
-        if not CONNECTION.is_alive():
+        connection = get_connection()
+        if not connection.is_alive():
             return
-        self.queclient.clientdata['blobfolder'] = self.blobfolderpath
-        if not self.snapshot:
-            return
-        for devicename in self.snapshot:
-            for vectorname,vector in self.snapshot[devicename].items():
-                if vector.vectortype != "BLOBVector":
-                    continue
-                if vector.perm == 'wo':
-                    continue
-                # so its a BLOBVector, either ro or rw
-                if self.blobfolderpath:
-                    self.txque.put( (devicename, vectorname, "Also") )
-                else:
-                    self.txque.put( (devicename, vectorname, "Never") )
+        self.queclient.BLOBfolder = self.blobfolderpath
+
 
 
     def check_rxque(self) -> None:
@@ -250,9 +239,10 @@ class _Connection:
         self.make_connection(host, port, self.blobfolderpath)
 
     def disconnect(self):
-        if CONNECTION.is_alive():
-            CONNECTION.txque.put(None)
-            CONNECTION.clientthread.join()
+        connection = get_connection()
+        if connection.is_alive():
+            connection.txque.put(None)
+            connection.clientthread.join()
         self.queclient = None
         self.clientthread = None
         self.snapshot = None
