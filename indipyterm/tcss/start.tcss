@@ -83,7 +83,7 @@ DeviceSc {
             height: 1fr;
             background: $panel;
             border: mediumvioletred;
-        }
+           }
 
         #device-messages {
             width: 100%;
@@ -91,12 +91,48 @@ DeviceSc {
             background: $panel;
             scrollbar-background: $panel;
             scrollbar-corner-color: $panel;
-        }
+            }
 
         #dev-group-pane {
             width: 100%;
             height: 4fr;
             padding: 1;
-        }
+           }
+     }
 
+
+VectorPane {
+            background: $panel;
+
+            .vectormessage {
+                margin-left: 1;
+                height: 2;
+                }
+          }
+
+
+VectorTitle {
+            height: 1;
+
+            .vectorlabel {
+                width: auto;
+                margin-left: 1;
+                }
+
+            .vectorstate {
+                dock: right;
+                width: auto;
+                margin-right: 1;
+                }
+
+            .vstate {
+                width: auto;
+                }
+          }
+
+
+
+.memberpane {
+    background: $panel;
+    margin-left: 1;
     }
