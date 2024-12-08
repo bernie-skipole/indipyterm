@@ -19,7 +19,7 @@ logger.addHandler(logging.NullHandler())
 #########################################################################
 #
 # Global variable _DEVICENAME will be the name of the device
-# being displayed
+# currently being displayed
 #
 #########################################################################
 
@@ -127,6 +127,11 @@ class _Connection:
         self.startsc = None
         self.devicesc = None
 
+        # Every device, vector, widget will be given an id
+        # starting with characters 'id' followed by a string number
+        # created by incrementing this self.itemid
+        self._itemid = 0
+
 
     def checkhostport(self, hostport):
         """Given a hostport string, Checks it and sets self.hostport
@@ -201,6 +206,11 @@ class _Connection:
             mlist = reversed([ localtimestring(t) + "  " + m for t,m in messages ])
             log.write_lines(mlist)
 
+        if not item.devicename:
+            # possible getProperties or system message which is handled above, just return
+            return
+
+        # get currently displayed device
         devicename = get_devicename()
         if devicename:
             if item.eventtype == "Message" and (item.devicename == devicename) and (not item.vectorname):
@@ -218,19 +228,66 @@ class _Connection:
                 self.app.push_screen('startsc')
             return
 
-        if (item.eventtype == "Define" or item.eventtype == "DefineBLOB") and ((self.snapshot is None) or (item.devicename not in self.snapshot)):
-            # new device, add a button to the device pane
-            device_pane = self.startsc.query_one("#device-pane")
-            device_pane.remove_children("#no-devices")
-            device_pane.mount(Button(item.devicename, name=item.devicename, variant="primary", classes="devices"))
+        if (item.eventtype == "Define" or item.eventtype == "DefineBLOB"):
+            # does this device have a user string
+            if not snapshot[item.devicename].user_string:
+                # new device, give it an id and add a button to the device pane ############?? disabled device???, perhaps on disabling set user strings to ""
+                self._itemid += 1
+                deviceid = "id"+str(self._itemid)
+                self.queclient[item.devicename].user_string = deviceid
+                snapshot[item.devicename].user_string = deviceid
+                device_pane = self.startsc.query_one("#device-pane")
+                device_pane.remove_children("#no-devices")
+                device_pane.mount(Button(item.devicename, name=item.devicename, variant="primary", classes="devices"))
+                # give the vector an id
+                self._itemid += 1
+                vectorid = "id"+str(self._itemid)
+                self.queclient[item.devicename][item.vectorname].user_string = vectorid
+                snapshot[item.devicename][item.vectorname].user_string = vectorid
+                # give every member an id
+                membernamelist = list(snapshot[item.devicename][item.vectorname].keys())
+                for membername in membernamelist:
+                    self._itemid += 1
+                    memberid = "id"+str(self._itemid)
+                    self.queclient[item.devicename][item.vectorname].member(membername).user_string = memberid
+                    snapshot[item.devicename][item.vectorname].member(membername).user_string = memberid
+            elif not snapshot[item.devicename][item.vectorname].user_string:
+                # known device, but new vector, give the vector an id   ########### todo: add device/vector widget, if device being displayed
+                self._itemid += 1
+                vectorid = "id"+str(self._itemid)
+                self.queclient[item.devicename][item.vectorname].user_string = vectorid
+                snapshot[item.devicename][item.vectorname].user_string = vectorid
+                # give every member an id
+                membernamelist = list(snapshot[item.devicename][item.vectorname].keys())
+                for membername in membernamelist:
+                    self._itemid += 1
+                    memberid = "id"+str(self._itemid)
+                    self.queclient[item.devicename][item.vectorname].member(membername).user_string = memberid
+                    snapshot[item.devicename][item.vectorname].member(membername).user_string = memberid
 
-        if item.eventtype == "DefineBLOB" and (item.snapshot[item.devicename][item.vectorname].perm != 'wo'):
-            # A BLOB vector is defined in which the server can send BLOBs,
-            # enable or disable it depending on if self.blobfolderpath is defined
-            if self.blobfolderpath:
-                self.txque.put( (item.devicename, item.vectorname, "Also") )
+        if item.eventtype == "Delete":  # remove user_string id's
+            if item.vectorname:
+                # delete the vector id
+                self.queclient[item.devicename][item.vectorname].user_string = ""
+                snapshot[item.devicename][item.vectorname].user_string = ""
+                # give every member an empty id
+                membernamelist = list(snapshot[item.devicename][item.vectorname].keys())
+                for membername in membernamelist:
+                    self.queclient[item.devicename][item.vectorname].member(membername).user_string = ""
+                    snapshot[item.devicename][item.vectorname].member(membername).user_string = ""           ########## todo, delete vector
             else:
-                self.txque.put( (item.devicename, item.vectorname, "Never") )
+                # no vectorname, so delete entire device                                ########## todo, delete device
+                self.queclient[item.devicename].user_string = ""
+                snapshot[item.devicename].user_string = ""
+                vectornamelist = list(snapshot[item.devicename].keys())
+                for vectorname in vectornamelist:
+                    self.queclient[item.devicename][vectorname].user_string = ""
+                    snapshot[item.devicename][vectorname].user_string = ""
+                    membernamelist = list(snapshot[item.devicename][vectorname].keys())
+                    for membername in membernamelist:
+                        self.queclient[item.devicename][vectorname].member(membername).user_string = ""
+                        snapshot[item.devicename][vectorname].member(membername).user_string = ""
+
         self.snapshot = snapshot
 
 
@@ -253,6 +310,7 @@ class _Connection:
         t = datetime.now(tz=timezone.utc)
         log.write(localtimestring(t) + "  " + "DISCONNECTED")
         self.clear_devices()
+        self._itemid = 0
 
 
     def clear_devices(self):

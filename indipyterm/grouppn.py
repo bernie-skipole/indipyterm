@@ -44,7 +44,7 @@ class VectorPane(VerticalScroll):
 
     def __init__(self, vector):
         self.vector = vector
-        super().__init__()
+        super().__init__(id=vector.user_string)
 
 
     def compose(self):
