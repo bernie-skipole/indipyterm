@@ -13,42 +13,30 @@ from .memberpn import SwitchMemberPane, TextMemberPane, LightMemberPane, NumberM
 
 
 
-class VectorState(Horizontal):
+class VectorTitle(Horizontal):
 
     vstate = reactive("Alert", recompose=True)
 
-    def compose(self):
-        "Draw the vector"
-        yield Static("State: ", classes="vstate" )
-        state = Static(self.vstate, classes="vstate")
-        if self.vstate == "Ok":
-            state.styles.background = "darkgreen"
-            state.styles.color = "white"
-        elif self.vstate == "Alert":
-            state.styles.background = "red"
-            state.styles.color = "white"
-        if self.vstate == "Busy":
-            state.styles.background = "yellow"
-            state.styles.color = "black"
-        yield state
-
-
-
-
-class VectorTitle(Horizontal):
-
-    def __init__(self, vector):
-        self.vector = vector
+    def __init__(self, vlabel):
+        self.vlabel = vlabel
         super().__init__()
 
-
     def compose(self):
         "Draw the vector"
-        vectorstate = VectorState(classes="vectorstate")
-        vectorstate.vstate = self.vector.state
-        yield Static(self.vector.label, classes="vectorlabel")
-        yield vectorstate
-
+        yield Static(self.vlabel, classes="vectorlabel")
+        with Horizontal(classes="vectorstate"):
+            yield Static("State: ", classes="vstate" )
+            state = Static(self.vstate, classes="vstate")
+            if self.vstate == "Ok":
+                state.styles.background = "darkgreen"
+                state.styles.color = "white"
+            elif self.vstate == "Alert":
+                state.styles.background = "red"
+                state.styles.color = "white"
+            if self.vstate == "Busy":
+                state.styles.background = "yellow"
+                state.styles.color = "black"
+            yield state
 
 
 
@@ -61,9 +49,15 @@ class VectorPane(VerticalScroll):
 
     def compose(self):
         "Draw the vector"
-        yield VectorTitle(self.vector)
+        # create the vector title, with reactive 'vstate' variable
+        vectortitle = VectorTitle(self.vector.label)
+        vectortitle.vstate = self.vector.state
+        yield vectortitle
+
+        # create area for vector message
         yield Static(self.vector.message, classes="vectormessage")
 
+        # show the vector members
         members = self.vector.members()
         for member in members.values():
             if self.vector.vectortype == "SwitchVector":
