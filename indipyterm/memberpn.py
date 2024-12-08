@@ -6,14 +6,14 @@ from textual.reactive import reactive
 from textual.screen import Screen
 from textual.containers import Container, Horizontal, VerticalScroll, Center
 
-from .connections import get_connection, get_devicename, get_devicemessages, get_devicegroups
+from .connections import get_connection, get_devicename, get_devicemessages, get_devicegroups, get_id
 
 
 class SwitchMemberPane(VerticalScroll):
 
     def __init__(self, member, classes):
         self.member = member
-        super().__init__(classes=classes, id=member.user_string)
+        super().__init__(classes=classes) #, id=member.user_string)
 
 
     def compose(self):
@@ -27,7 +27,7 @@ class TextMemberPane(VerticalScroll):
 
     def __init__(self, member, classes):
         self.member = member
-        super().__init__(classes=classes, id=member.user_string)
+        super().__init__(classes=classes) #, id=member.user_string)
 
 
     def compose(self):
@@ -40,7 +40,7 @@ class LightMemberPane(VerticalScroll):
 
     def __init__(self, member, classes):
         self.member = member
-        super().__init__(classes=classes, id=member.user_string)
+        super().__init__(classes=classes) #, id=member.user_string)
 
 
     def compose(self):
@@ -53,7 +53,7 @@ class NumberMemberPane(VerticalScroll):
 
     def __init__(self, member, classes):
         self.member = member
-        super().__init__(classes=classes, id=member.user_string)
+        super().__init__(classes=classes) #, id=member.user_string)
 
 
     def compose(self):
@@ -65,7 +65,7 @@ class BLOBMemberPane(VerticalScroll):
 
     def __init__(self, member, classes):
         self.member = member
-        super().__init__(classes=classes, id=member.user_string)
+        super().__init__(classes=classes) #, id=member.user_string)
 
 
     def compose(self):

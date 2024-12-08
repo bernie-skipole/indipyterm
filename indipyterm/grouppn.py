@@ -7,7 +7,7 @@ from textual.reactive import reactive
 from textual.screen import Screen
 from textual.containers import Container, Horizontal, VerticalScroll, Center
 
-from .connections import get_connection, get_devicename, get_devicemessages, get_devicegroups
+from .connections import get_connection, get_devicename, get_devicemessages, get_devicegroups, get_id
 
 from .memberpn import SwitchMemberPane, TextMemberPane, LightMemberPane, NumberMemberPane, BLOBMemberPane
 
@@ -44,7 +44,8 @@ class VectorPane(VerticalScroll):
 
     def __init__(self, vector):
         self.vector = vector
-        super().__init__(id=vector.user_string)
+        vector_id = get_id(vector.devicename, vector.name)
+        super().__init__(id=vector_id)
 
 
     def compose(self):
