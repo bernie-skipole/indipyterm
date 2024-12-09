@@ -149,6 +149,7 @@ class _ItemID():
 _ITEMID = _ItemID()
 
 def get_id(devicename, vectorname=None, membername=None):
+    "This is imported into the gui to create ids for widgets"
     global _ITEMID
     idnumber = _ITEMID.get(devicename, vectorname, membername)
     if idnumber is None:
