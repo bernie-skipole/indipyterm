@@ -282,7 +282,7 @@ class _Connection:
 
         if (item.eventtype == "Define" or item.eventtype == "DefineBLOB"):
             # does this device have an id
-            if not get_id(item.devicename)
+            if not get_id(item.devicename):
                 self._itemid += 1
                 _ITEMID.set(self._itemid, item.devicename)
                 device_pane = self.startsc.query_one("#device-pane")
