@@ -11,9 +11,10 @@ from .connections import get_connection, get_devicename, get_devicemessages, get
 
 class SwitchMemberPane(VerticalScroll):
 
-    def __init__(self, member, classes):
+    def __init__(self, vector, member, classes):
         self.member = member
-        super().__init__(classes=classes) #, id=member.user_string)
+        self.vector = vector
+        super().__init__(classes=classes, id=get_id(vector.devicename, vector.name, member.name))
 
 
     def compose(self):
@@ -25,10 +26,10 @@ class SwitchMemberPane(VerticalScroll):
 
 class TextMemberPane(VerticalScroll):
 
-    def __init__(self, member, classes):
+    def __init__(self, vector, member, classes):
         self.member = member
-        super().__init__(classes=classes) #, id=member.user_string)
-
+        self.vector = vector
+        super().__init__(classes=classes, id=get_id(vector.devicename, vector.name, member.name))
 
     def compose(self):
         "Draw the member"
@@ -38,9 +39,10 @@ class TextMemberPane(VerticalScroll):
 
 class LightMemberPane(VerticalScroll):
 
-    def __init__(self, member, classes):
+    def __init__(self, vector, member, classes):
         self.member = member
-        super().__init__(classes=classes) #, id=member.user_string)
+        self.vector = vector
+        super().__init__(classes=classes, id=get_id(vector.devicename, vector.name, member.name))
 
 
     def compose(self):
@@ -51,10 +53,10 @@ class LightMemberPane(VerticalScroll):
 
 class NumberMemberPane(VerticalScroll):
 
-    def __init__(self, member, classes):
+    def __init__(self, vector, member, classes):
         self.member = member
-        super().__init__(classes=classes) #, id=member.user_string)
-
+        self.vector = vector
+        super().__init__(classes=classes, id=get_id(vector.devicename, vector.name, member.name))
 
     def compose(self):
         "Draw the member"
@@ -63,9 +65,10 @@ class NumberMemberPane(VerticalScroll):
 
 class BLOBMemberPane(VerticalScroll):
 
-    def __init__(self, member, classes):
+    def __init__(self, vector, member, classes):
         self.member = member
-        super().__init__(classes=classes) #, id=member.user_string)
+        self.vector = vector
+        super().__init__(classes=classes, id=get_id(vector.devicename, vector.name, member.name))
 
 
     def compose(self):

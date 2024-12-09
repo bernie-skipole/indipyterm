@@ -95,18 +95,33 @@ class _ItemID():
 
     def __init__(self):
         self._itemdict = {}
+        # Every device, vector, widget will be given an id
+        # starting with characters 'id' followed by a string number
+        # created by incrementing this self._itemid
+        self._itemid = 0
 
-    def set(self, value, devicename, vectorname=None, membername=None):
+    def set(self, devicename, vectorname=None, membername=None):
         if not vectorname:
             vectorname = None
         if not membername:
             membername = None
         if not devicename:
-            raise KeyError("A devicename must be given to get an id")
+            raise KeyError("A devicename must be given to set an id")
         if membername and (not vectorname):
             raise KeyError("If a membername is specified, a vectorname must also be given")
-        self._itemdict[devicename, vectorname, membername] = value
+        self._itemid += 1
+        self._itemdict[devicename, vectorname, membername] = self._itemid
 
+    def unset(self, devicename, vectorname=None, membername=None):
+        if not vectorname:
+            vectorname = None
+        if not membername:
+            membername = None
+        if not devicename:
+            raise KeyError("A devicename must be given to unset an id")
+        if membername and (not vectorname):
+            raise KeyError("If a membername is specified, a vectorname must also be given")
+        self._itemdict[devicename, vectorname, membername] = None
 
     def get(self, devicename, vectorname=None, membername=None):
         if not vectorname:
@@ -122,6 +137,7 @@ class _ItemID():
 
     def clear(self):
         self._itemdict.clear()
+        self._itemid = 0
 
 
 ##################################
@@ -132,14 +148,12 @@ class _ItemID():
 
 _ITEMID = _ItemID()
 
-
 def get_id(devicename, vectorname=None, membername=None):
     global _ITEMID
     idnumber = _ITEMID.get(devicename, vectorname, membername)
     if idnumber is None:
         return
     return "id"+str(idnumber)
-
 
 
 def localtimestring(t):
@@ -178,10 +192,6 @@ class _Connection:
         self.startsc = None
         self.devicesc = None
 
-        # Every device, vector, widget will be given an id
-        # starting with characters 'id' followed by a string number
-        # created by incrementing this self.itemid
-        self._itemid = 0
 
     def checkhostport(self, hostport):
         """Given a hostport string, Checks it and sets self.hostport
@@ -283,49 +293,44 @@ class _Connection:
         if (item.eventtype == "Define" or item.eventtype == "DefineBLOB"):
             # does this device have an id
             if not get_id(item.devicename):
-                self._itemid += 1
-                _ITEMID.set(self._itemid, item.devicename)
+                _ITEMID.set(item.devicename)
                 device_pane = self.startsc.query_one("#device-pane")
                 device_pane.remove_children("#no-devices")
                 device_pane.mount(Button(item.devicename, name=item.devicename, variant="primary", classes="devices"))
                 # give the vector an id
-                self._itemid += 1
-                _ITEMID.set(self._itemid, item.devicename, item.vectorname)
+                _ITEMID.set(item.devicename, item.vectorname)
                 # give every member an id
                 membernamelist = list(snapshot[item.devicename][item.vectorname].keys())
                 for membername in membernamelist:
-                    self._itemid += 1
-                    _ITEMID.set(self._itemid, item.devicename, item.vectorname, membername)
+                    _ITEMID.set(item.devicename, item.vectorname, membername)
 
             elif not get_id(item.devicename, item.vectorname):
                 # known device, but new vector, give the vector an id   ########### todo: add device/vector widget, if device being displayed
-                self._itemid += 1
-                _ITEMID.set(self._itemid, item.devicename, item.vectorname)
+                _ITEMID.set(item.devicename, item.vectorname)
                 # give every member an id
                 membernamelist = list(snapshot[item.devicename][item.vectorname].keys())
                 for membername in membernamelist:
-                    self._itemid += 1
-                    _ITEMID.set(self._itemid, item.devicename, item.vectorname, membername)
+                    _ITEMID.set(item.devicename, item.vectorname, membername)
 
 
         if item.eventtype == "Delete":  # remove id's
             if item.vectorname:
                 # delete the vector id
-                _ITEMID.set(None, item.devicename, item.vectorname)
+                _ITEMID.unset(item.devicename, item.vectorname)
                 # give every member an empty id
                 membernamelist = list(snapshot[item.devicename][item.vectorname].keys())
                 for membername in membernamelist:
-                    _ITEMID.set(None, item.devicename, item.vectorname, membername)
+                    _ITEMID.unset(None, item.devicename, item.vectorname, membername)
                     ########## todo, delete vector
             else:
                 # no vectorname, so delete entire device                                ########## todo, delete device
-                _ITEMID.set(None, item.devicename)
+                _ITEMID.unset(item.devicename)
                 vectornamelist = list(snapshot[item.devicename].keys())
                 for vectorname in vectornamelist:
-                    _ITEMID.set(None, item.devicename, vectorname)
+                    _ITEMID.unset(item.devicename, vectorname)
                     membernamelist = list(snapshot[item.devicename][vectorname].keys())
                     for membername in membernamelist:
-                        _ITEMID.set(None, item.devicename, vectorname, membername)
+                        _ITEMID.unset(item.devicename, vectorname, membername)
 
 
         self.snapshot = snapshot
@@ -336,6 +341,7 @@ class _Connection:
         self.make_connection(host, port, self.blobfolderpath)
 
     def disconnect(self):
+        global _ITEMID
         connection = get_connection()
         if connection.is_alive():
             connection.txque.put(None)
@@ -351,6 +357,7 @@ class _Connection:
         log.write(localtimestring(t) + "  " + "DISCONNECTED")
         self.clear_devices()
         self._itemid = 0
+        _ITEMID.clear()
 
 
     def clear_devices(self):

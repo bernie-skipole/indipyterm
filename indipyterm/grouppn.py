@@ -62,15 +62,15 @@ class VectorPane(VerticalScroll):
         members = self.vector.members()
         for member in members.values():
             if self.vector.vectortype == "SwitchVector":
-                yield SwitchMemberPane(member, classes="memberpane")
+                yield SwitchMemberPane(self.vector, member, classes="memberpane")
             if self.vector.vectortype == "TextVector":
-                yield TextMemberPane(member, classes="memberpane")
+                yield TextMemberPane(self.vector, member, classes="memberpane")
             if self.vector.vectortype == "LightVector":
-                yield LightMemberPane(member, classes="memberpane")
+                yield LightMemberPane(self.vector, member, classes="memberpane")
             if self.vector.vectortype == "NumberVector":
-                yield NumberMemberPane(member, classes="memberpane")
+                yield NumberMemberPane(self.vector, member, classes="memberpane")
             if self.vector.vectortype == "BLOBVector":
-                yield BLOBMemberPane(member, classes="memberpane")
+                yield BLOBMemberPane(self.vector, member, classes="memberpane")
 
 
 class GroupTabPane(TabPane):
