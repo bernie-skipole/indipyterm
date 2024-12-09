@@ -356,7 +356,6 @@ class _Connection:
         t = datetime.now(tz=timezone.utc)
         log.write(localtimestring(t) + "  " + "DISCONNECTED")
         self.clear_devices()
-        self._itemid = 0
         _ITEMID.clear()
 
 
