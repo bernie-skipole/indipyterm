@@ -91,34 +91,55 @@ def get_connection():
     return _CONNECTION
 
 
+class _ItemID():
+
+    def __init__(self):
+        self._itemdict = {}
+
+    def set(self, value, devicename, vectorname=None, membername=None):
+        if not vectorname:
+            vectorname = None
+        if not membername:
+            membername = None
+        if not devicename:
+            raise KeyError("A devicename must be given to get an id")
+        if membername and (not vectorname):
+            raise KeyError("If a membername is specified, a vectorname must also be given")
+        self._itemdict[devicename, vectorname, membername] = value
+
+
+    def get(self, devicename, vectorname=None, membername=None):
+        if not vectorname:
+            vectorname = None
+        if not membername:
+            membername = None
+        if not devicename:
+            raise KeyError("A devicename must be given to get an id")
+        if membername and (not vectorname):
+            raise KeyError("If a membername is specified, a vectorname must also be given")
+        return self._itemdict.get((devicename, vectorname, membername))
+
+
+    def clear(self):
+        self._itemdict.clear()
+
+
+##################################
+#
+# Create a global _ItemID
+#
+###################################
+
+_ITEMID = _ItemID()
+
 
 def get_id(devicename, vectorname=None, membername=None):
-    if not devicename:
-        raise KeyError("A devicename must be given to get an id")
-    if membername and (not vectorname):
-        raise KeyError("If a membername is specified, a vectorname must also be given")
-
-    queclient = get_connection().queclient
-    if queclient is None:
+    global _ITEMID
+    idnumber = _ITEMID.get(devicename, vectorname, membername)
+    if idnumber is None:
         return
+    return "id"+str(idnumber)
 
-    if vectorname and membername:
-        if devicename in queclient:
-            device = queclient[devicename]
-            if vectorname in device:
-                vector = device[vectorname]
-                if membername in vector:
-                    return vector.member(membername).user_string
-        return
-
-    if vectorname:
-        if devicename in queclient:
-            device = queclient[devicename]
-            if vectorname in device:
-                return device[vectorname].user_string
-
-    if devicename in queclient:
-        return queclient[devicename].user_string
 
 
 def localtimestring(t):
@@ -216,6 +237,8 @@ class _Connection:
 
     def check_rxque(self) -> None:
         """Method to handle received data."""
+        global _ITEMID
+
         try:
             item = self.rxque.get_nowait()
         except queue.Empty:
@@ -258,54 +281,51 @@ class _Connection:
             return
 
         if (item.eventtype == "Define" or item.eventtype == "DefineBLOB"):
-            # does this device have a user string
-            if not self.queclient[item.devicename].user_string:
+            # does this device have an id
+            if not get_id(item.devicename)
                 self._itemid += 1
-                deviceid = "id"+str(self._itemid)
-                self.queclient[item.devicename].user_string = deviceid
+                _ITEMID.set(self._itemid, item.devicename)
                 device_pane = self.startsc.query_one("#device-pane")
                 device_pane.remove_children("#no-devices")
                 device_pane.mount(Button(item.devicename, name=item.devicename, variant="primary", classes="devices"))
                 # give the vector an id
                 self._itemid += 1
-                vectorid = "id"+str(self._itemid)
-                self.queclient[item.devicename][item.vectorname].user_string = vectorid
+                _ITEMID.set(self._itemid, item.devicename, item.vectorname)
                 # give every member an id
-                membernamelist = list(self.queclient[item.devicename][item.vectorname].keys())
+                membernamelist = list(snapshot[item.devicename][item.vectorname].keys())
                 for membername in membernamelist:
                     self._itemid += 1
-                    memberid = "id"+str(self._itemid)
-                    self.queclient[item.devicename][item.vectorname].member(membername).user_string = memberid
-            elif not self.queclient[item.devicename][item.vectorname].user_string:
+                    _ITEMID.set(self._itemid, item.devicename, item.vectorname, membername)
+
+            elif not get_id(item.devicename, item.vectorname):
                 # known device, but new vector, give the vector an id   ########### todo: add device/vector widget, if device being displayed
                 self._itemid += 1
-                vectorid = "id"+str(self._itemid)
-                self.queclient[item.devicename][item.vectorname].user_string = vectorid
+                _ITEMID.set(self._itemid, item.devicename, item.vectorname)
                 # give every member an id
-                membernamelist = list(self.queclient[item.devicename][item.vectorname].keys())
+                membernamelist = list(snapshot[item.devicename][item.vectorname].keys())
                 for membername in membernamelist:
                     self._itemid += 1
-                    memberid = "id"+str(self._itemid)
-                    self.queclient[item.devicename][item.vectorname].member(membername).user_string = memberid
+                    _ITEMID.set(self._itemid, item.devicename, item.vectorname, membername)
 
-        if item.eventtype == "Delete":  # remove user_string id's
+
+        if item.eventtype == "Delete":  # remove id's
             if item.vectorname:
                 # delete the vector id
-                self.queclient[item.devicename][item.vectorname].user_string = ""
+                _ITEMID.set(None, item.devicename, item.vectorname)
                 # give every member an empty id
-                membernamelist = list(self.queclient[item.devicename][item.vectorname].keys())
+                membernamelist = list(snapshot[item.devicename][item.vectorname].keys())
                 for membername in membernamelist:
-                    self.queclient[item.devicename][item.vectorname].member(membername).user_string = ""
-                   ########## todo, delete vector
+                    _ITEMID.set(None, item.devicename, item.vectorname, membername)
+                    ########## todo, delete vector
             else:
                 # no vectorname, so delete entire device                                ########## todo, delete device
-                self.queclient[item.devicename].user_string = ""
-                vectornamelist = list(self.queclient[item.devicename].keys())
+                _ITEMID.set(None, item.devicename)
+                vectornamelist = list(snapshot[item.devicename].keys())
                 for vectorname in vectornamelist:
-                    self.queclient[item.devicename][vectorname].user_string = ""
-                    membernamelist = list(self.queclient[item.devicename][vectorname].keys())
+                    _ITEMID.set(None, item.devicename, vectorname)
+                    membernamelist = list(snapshot[item.devicename][vectorname].keys())
                     for membername in membernamelist:
-                        self.queclient[item.devicename][vectorname].member(membername).user_string = ""
+                        _ITEMID.set(None, item.devicename, vectorname, membername)
 
 
         self.snapshot = snapshot
