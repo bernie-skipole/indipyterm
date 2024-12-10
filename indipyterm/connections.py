@@ -156,6 +156,13 @@ def get_id(devicename, vectorname=None, membername=None):
         return
     return "id"+str(idnumber)
 
+def set_id(devicename, vectorname=None, membername=None):
+    "This is imported into the gui to create ids for widgets"
+    global _ITEMID
+    idnumber = _ITEMID.get(devicename, vectorname, membername)
+    if idnumber is None:
+        _ITEMID.set(devicename, vectorname, membername)
+
 
 def localtimestring(t):
     "Return a string of the local time (not date)"
@@ -260,9 +267,10 @@ class _Connection:
             self.snapshot = None
             return
 
-        snapshot = item.snapshot
+        self.snapshot = item.snapshot
+        snapshot = self.snapshot
 
-        if item.eventtype == "Message" and (not item.devicename) and (not item.vectorname):
+        if (item.eventtype == "Message") and (not item.devicename) and (not item.vectorname):
             log = self.startsc.query_one("#system-messages")
             log.clear()
             messages = snapshot.messages
@@ -273,17 +281,6 @@ class _Connection:
             # possible getProperties or system message which is handled above, just return
             return
 
-        # get currently displayed device
-        devicename = get_devicename()
-        if devicename:
-            if item.eventtype == "Message" and (item.devicename == devicename) and (not item.vectorname):
-                messages = snapshot[devicename].messages
-                if messages:
-                    log = self.devicesc.query_one("#device-messages")
-                    log.clear()
-                    mlist = reversed([ localtimestring(t) + "  " + m for t,m in messages ])
-                    log.write_lines(mlist)
-
         if not snapshot.connected:
             # the connection is disconnected
             self.clear_devices()
@@ -291,27 +288,8 @@ class _Connection:
                 self.app.push_screen('startsc')
             return
 
-        if (item.eventtype == "Define" or item.eventtype == "DefineBLOB"):
-            # does this device have an id
-            if not get_id(item.devicename):
-                _ITEMID.set(item.devicename)
-                device_pane = self.startsc.query_one("#device-pane")
-                device_pane.remove_children("#no-devices")
-                device_pane.mount(Button(item.devicename, name=item.devicename, variant="primary", classes="devices"))
-                # give the vector an id
-                _ITEMID.set(item.devicename, item.vectorname)
-                # give every member an id
-                membernamelist = list(snapshot[item.devicename][item.vectorname].keys())
-                for membername in membernamelist:
-                    _ITEMID.set(item.devicename, item.vectorname, membername)
-
-            elif not get_id(item.devicename, item.vectorname):
-                # known device, but new vector, give the vector an id   ########### todo: add device/vector widget, if device being displayed
-                _ITEMID.set(item.devicename, item.vectorname)
-                # give every member an id
-                membernamelist = list(snapshot[item.devicename][item.vectorname].keys())
-                for membername in membernamelist:
-                    _ITEMID.set(item.devicename, item.vectorname, membername)
+        # get currently displayed device
+        devicename = get_devicename()
 
 
         if item.eventtype == "Delete":  # remove id's
@@ -322,9 +300,9 @@ class _Connection:
                 membernamelist = list(snapshot[item.devicename][item.vectorname].keys())
                 for membername in membernamelist:
                     _ITEMID.unset(None, item.devicename, item.vectorname, membername)
-                    ########## todo, delete vector
+                ########## todo, if devicename == item.devicename:recompose devicesc screen
             else:
-                # no vectorname, so delete entire device                                ########## todo, delete device
+                # no vectorname, so delete entire device
                 _ITEMID.unset(item.devicename)
                 vectornamelist = list(snapshot[item.devicename].keys())
                 for vectorname in vectornamelist:
@@ -332,9 +310,45 @@ class _Connection:
                     membernamelist = list(snapshot[item.devicename][vectorname].keys())
                     for membername in membernamelist:
                         _ITEMID.unset(item.devicename, vectorname, membername)
+                if devicename == item.devicename:
+                    if not self.startsc.is_active:
+                        self.app.push_screen('startsc')
+                    # else:
+                    #   recompose self.startsc
+            return
 
+        # Has device got an id
+        did = get_id(item.devicename)
+        if not did:
+            device_pane = self.startsc.query_one("#device-pane")
+            device_pane.remove_children("#no-devices")
+            device_pane.mount(Button(item.devicename, name=item.devicename, variant="primary", classes="devices"))
+            set_id(item.devicename)
 
-        self.snapshot = snapshot
+        if item.devicename != devicename:
+            # This device is not currently being shown
+            # no need to update any widgets
+            return
+
+        # so device which is currently on self.devicesc has been updated
+        # update devicesc
+
+        # if devicename has no id, recompose devicesc  ###########################
+
+        if item.eventtype == "Message" and (not item.vectorname):
+            messages = snapshot[devicename].messages
+            if messages:
+                log = self.devicesc.query_one("#device-messages")
+                log.clear()
+                mlist = reversed([ localtimestring(t) + "  " + m for t,m in messages ])
+                log.write_lines(mlist)
+
+        # check item.eventtype == state - so just vector state updated
+
+        # if vector has no id, recompose devicesc
+        # if member has no id, recompose vectorpanel
+        # if full id available, recompose member - including vector state
+
 
 
     def connect(self):
@@ -357,7 +371,6 @@ class _Connection:
         t = datetime.now(tz=timezone.utc)
         log.write(localtimestring(t) + "  " + "DISCONNECTED")
         self.clear_devices()
-        _ITEMID.clear()
 
 
     def clear_devices(self):
@@ -365,6 +378,7 @@ class _Connection:
         if device_pane.query(".devices"):
             device_pane.remove_children(".devices")
             device_pane.mount(Static("No Devices found", id="no-devices"))
+        _ITEMID.clear()
 
 
 

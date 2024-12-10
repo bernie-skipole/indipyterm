@@ -8,13 +8,27 @@ from textual.reactive import reactive
 from textual.screen import Screen
 from textual.containers import Container, HorizontalScroll, VerticalScroll, Center
 
-from .connections import get_connection, get_devicename, set_devicename
+from .connections import get_connection, get_devicename, set_devicename, get_id, set_id
 
 
 class DevicePane(VerticalScroll):
 
-    def on_mount(self):
+    def compose(self):
         self.border_title = "Devices"
+        CONNECTION = get_connection()
+        if not CONNECTION.snapshot:
+            yield Static("No Devices found", id="no-devices")
+            return
+        devicefound = False
+        for devicename, device in CONNECTION.snapshot.items():
+            if device.enable:
+                devicefound = True
+                yield Button(devicename, name=devicename, variant="primary", classes="devices")
+                set_id(devicename)
+        if not devicefound:
+           yield Static("No Devices found", id="no-devices")
+
+
 
     @on(Button.Pressed, ".devices")
     def choose_device(self, event):
@@ -50,18 +64,19 @@ class BlobPane(HorizontalScroll):
 
 class MessagesPane(VerticalScroll):
 
-    def on_mount(self):
+    def compose(self):
         self.border_title = "System Messages"
+        yield Log(id="system-messages")
 
 
 class ConnectionPane(VerticalScroll):
 
-    def on_mount(self):
+    def compose(self):
         self.border_title = "Set INDI Server"
         CONNECTION = get_connection()
-        con_input = self.query_one("#con-input")
-        con_status = self.query_one("#con-status")
-        con_button = self.query_one("#con-button")
+        con_input = ConInput(placeholder="Host:Port", id="con-input")
+        con_status = Static("Host:Port not set", id="con-status")
+        con_button = Button("Connect", id="con-button")
         if CONNECTION.host and CONNECTION.port:
             con_input.disabled = True
             con_status.update(f"Current server : {CONNECTION.host}:{CONNECTION.port}")
@@ -70,6 +85,11 @@ class ConnectionPane(VerticalScroll):
             con_input.disabled = False
             con_status.update("Host:Port not set")
             con_button.label = "Connect"
+        yield con_input
+        yield con_status
+        with Center():
+            yield con_button
+
 
     def on_button_pressed(self, event):
         CONNECTION = get_connection()
@@ -99,6 +119,9 @@ class ConInput(Input):
 
 class BlobInput(Input):
 
+    def compose(self):
+        yield BlobInput(placeholder="Set a Folder to receive BLOBs", id="blob-input")
+
     def on_blur(self, event):
         CONNECTION = get_connection()
         blobfolder = CONNECTION.checkblobfolder(self.value)
@@ -126,14 +149,7 @@ class StartSc(Screen):
         yield Static("INDI Terminal", id="title")
         yield Footer()
         with Container(id="startsc-grid"):
-            with DevicePane(id="device-pane"):
-                yield Static("No Devices found", id="no-devices")
-            with ConnectionPane(id="con-pane"):
-                yield ConInput(placeholder="Host:Port", id="con-input")
-                yield Static("Host:Port not set", id="con-status")
-                with Center():
-                    yield Button("Connect", id="con-button")
-            with BlobPane(id="blob-pane"):
-                yield BlobInput(placeholder="Set a Folder to receive BLOBs", id="blob-input")
-            with MessagesPane(id="sys-messages-pane"):
-                yield Log(id="system-messages")
+            yield DevicePane(id="device-pane")
+            yield ConnectionPane(id="con-pane")
+            yield BlobPane(id="blob-pane")
+            yield MessagesPane(id="sys-messages-pane")

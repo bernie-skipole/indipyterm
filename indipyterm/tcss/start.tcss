@@ -108,27 +108,26 @@ VectorPane {
                 margin-left: 1;
                 height: 2;
                 }
-          }
 
+            .vectortitle {
+                height: 1;
 
-VectorTitle {
-            height: 1;
+                .vectorlabel {
+                    width: auto;
+                    margin-left: 1;
+                    }
 
-            .vectorlabel {
-                width: auto;
-                margin-left: 1;
-                }
+                .vectorstate {
+                    dock: right;
+                    width: auto;
+                    margin-right: 1;
+                    }
 
-            .vectorstate {
-                dock: right;
-                width: auto;
-                margin-right: 1;
-                }
-
-            .vstate {
-                width: auto;
-                }
-          }
+                .autowidth {
+                    width: auto;
+                    }
+                 }
+         }
 
 
 

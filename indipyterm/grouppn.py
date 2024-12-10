@@ -13,47 +13,33 @@ from .memberpn import SwitchMemberPane, TextMemberPane, LightMemberPane, NumberM
 
 
 
-class VectorTitle(Horizontal):
+class VectorPane(Container):
 
-    vstate = reactive("Alert", recompose=True)
-
-    def __init__(self, vlabel):
-        self.vlabel = vlabel
-        super().__init__()
-
-    def compose(self):
-        "Draw the vector"
-        yield Static(self.vlabel, classes="vectorlabel")
-        with Horizontal(classes="vectorstate"):
-            yield Static("State: ", classes="vstate" )
-            state = Static(self.vstate, classes="vstate")
-            if self.vstate == "Ok":
-                state.styles.background = "darkgreen"
-                state.styles.color = "white"
-            elif self.vstate == "Alert":
-                state.styles.background = "red"
-                state.styles.color = "white"
-            if self.vstate == "Busy":
-                state.styles.background = "yellow"
-                state.styles.color = "black"
-            yield state
-
-
-
-class VectorPane(VerticalScroll):
+    vstate = reactive("Alert")
 
     def __init__(self, vector):
         self.vector = vector
         vector_id = get_id(vector.devicename, vector.name)
         super().__init__(id=vector_id)
 
-
     def compose(self):
         "Draw the vector"
-        # create the vector title, with reactive 'vstate' variable
-        vectortitle = VectorTitle(self.vector.label)
-        vectortitle.vstate = self.vector.state
-        yield vectortitle
+        vectorstate = self.vector.state
+        with Horizontal(classes="vectortitle"):
+            yield Static(self.vector.label, classes="vectorlabel")
+            with Horizontal(classes="vectorstate"):
+                yield Static("State: ", classes="autowidth" )
+                state = Static(vectorstate, classes="autowidth vstate")
+                if vectorstate == "Ok":
+                    state.styles.background = "darkgreen"
+                    state.styles.color = "white"
+                elif vectorstate == "Alert":
+                    state.styles.background = "red"
+                    state.styles.color = "white"
+                if vectorstate == "Busy":
+                    state.styles.background = "yellow"
+                    state.styles.color = "black"
+                yield state
 
         # create area for vector message
         yield Static(self.vector.message, classes="vectormessage")
@@ -72,15 +58,31 @@ class VectorPane(VerticalScroll):
             if self.vector.vectortype == "BLOBVector":
                 yield BLOBMemberPane(self.vector, member, classes="memberpane")
 
+    def watch_vstate(self, vstate):
+        state = self.query_one(".vstate")
+        if vstate == "Ok":
+            state.styles.background = "darkgreen"
+            state.styles.color = "white"
+        elif vstate == "Alert":
+            state.styles.background = "red"
+            state.styles.color = "white"
+        if vstate == "Busy":
+            state.styles.background = "yellow"
+            state.styles.color = "black"
+        state.update(vstate)
+
 
 class GroupTabPane(TabPane):
 
-    devicename = reactive(get_devicename)
+    def __init__(self, tabtitle, devicename, groupname):
+        self.devicename = devicename
+        self.groupname = groupname
+        super().__init__(tabtitle)
 
     def compose(self):
         "For every vector draw it"
         snapshot = get_connection().snapshot
-        vectors = list(vector for vector in snapshot[self.devicename].values() if vector.group == self.name)
+        vectors = list(vector for vector in snapshot[self.devicename].values() if vector.group == self.groupname)
         totalnumber = len(vectors)
         vnumber = 0
         for vector in vectors:
@@ -98,8 +100,8 @@ class GroupPane(VerticalScroll):
     def compose(self):
         grouplist = get_devicegroups(self.devicename)
         with TabbedContent():
-            for group in grouplist:
-                yield GroupTabPane(group, name=group).data_bind(GroupPane.devicename)
+            for groupname in grouplist:
+                yield GroupTabPane(groupname, devicename=self.devicename, groupname=groupname)
 
 
 #  how to add and remove groups?
