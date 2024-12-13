@@ -273,23 +273,23 @@ class _Connection:
         self.snapshot = item.snapshot
         snapshot = self.snapshot
 
-        #if (item.eventtype == "Message") and (not item.devicename) and (not item.vectorname):
-        #    log = self.startsc.query_one("#system-messages")
-        #    log.clear()
-        #    messages = snapshot.messages
-        #    mlist = reversed([ localtimestring(t) + "  " + m for t,m in messages ])
-        #    log.write_lines(mlist)
-
-
-        if not item.devicename:
-            # possible getProperties or system message which is handled above, just return
-            return
+        # system messages
+        if (item.eventtype == "Message") and (not item.devicename) and (not item.vectorname):
+            log = self.startsc.query_one("#system-messages")
+            log.clear()
+            messages = snapshot.messages
+            mlist = reversed([ localtimestring(t) + "  " + m for t,m in messages ])
+            log.write_lines(mlist)
 
         if not snapshot.connected:
             # the connection is disconnected
             self.clear_devices()
             if not self.startsc.is_active:
                 self.app.push_screen('startsc')
+            return
+
+        if not item.devicename:
+            # possible getProperties or system message which is handled above, just return
             return
 
         # get currently displayed device
@@ -346,7 +346,6 @@ class _Connection:
                 for membername in membernamelist:
                     set_id(item.devicename, item.vectorname, membername)
 
-
         if item.devicename != devicename:
             # This device is not currently being shown
             # no need to update any widgets
@@ -355,8 +354,7 @@ class _Connection:
         # so device which is currently on self.devicesc has been updated
         # update devicesc
 
-        # if devicename has no id, recompose devicesc  ###########################
-
+        # device messages
         if item.eventtype == "Message" and (not item.vectorname):
             messages = snapshot[devicename].messages
             if messages:
@@ -368,15 +366,23 @@ class _Connection:
         if not item.vectorname:
             return
 
-        # Display the vector state
+        # display the vector timestamp
+        vtimewidget = self.devicesc.query_one(f"#{get_id(devicename, item.vectorname)}_vtime")
+        vtimewidget.vtime = localtimestring(snapshot[devicename][item.vectorname].timestamp)
 
-        vectorstate = self.devicesc.query_one("#vstate")
-        vectorstate.vstate = snapshot[devicename][item.vectorname].state
+        # Display the vector state
+        vstatewidget = self.devicesc.query_one(f"#{get_id(devicename, item.vectorname)}_vstate")
+        vstatewidget.vstate = snapshot[devicename][item.vectorname].state
         if item.eventtype == "State":
             # Only the state has changed, and that's dealt with
             return
 
-        # display timestamp
+        # Display vector message
+        vmesswidget = self.devicesc.query_one(f"#{get_id(devicename, item.vectorname)}_vmessage")
+        vmesswidget.vmessage = snapshot[devicename][item.vectorname].message
+
+
+
 
 
     def connect(self):

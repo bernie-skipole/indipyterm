@@ -7,19 +7,34 @@ from textual.reactive import reactive
 from textual.screen import Screen
 from textual.containers import Container, Horizontal, VerticalScroll, Center
 
-from .connections import get_connection, get_devicename, get_devicemessages, get_devicegroups, get_id
+from .connections import get_connection, get_devicename, get_devicemessages, get_devicegroups, get_id, localtimestring
 
 from .memberpn import SwitchMemberPane, TextMemberPane, LightMemberPane, NumberMemberPane, BLOBMemberPane
 
 
+class VectorTime(Static):
+
+    vtime = reactive("")
+
+    def __init__(self, vector):
+        this_id = f"{get_id(vector.devicename, vector.name)}_vtime"
+        vectortime = localtimestring(vector.timestamp)
+        super().__init__(vectortime, classes="autowidth", id=this_id)
+        self.styles.margin = (0,1,0,1)   # margin 1 on left and right
+
+    def watch_vtime(self, vtime):
+        if vtime:
+            self.update(vtime)
+
 
 class VectorState(Static):
 
-
     vstate = reactive("")
 
-    def __init__(self, vectorstate):
-        super().__init__(vectorstate, classes="autowidth", id="vstate")
+    def __init__(self, vector):
+        this_id = f"{get_id(vector.devicename, vector.name)}_vstate"
+        vectorstate = vector.state
+        super().__init__(vectorstate, classes="autowidth", id=this_id)
         if vectorstate == "Ok":
             self.styles.background = "darkgreen"
             self.styles.color = "white"
@@ -51,6 +66,21 @@ class VectorState(Static):
         self.update(vstate)
 
 
+class VectorMessage(Static):
+
+    vmessage = reactive("")
+
+    def __init__(self, vector):
+        this_id = f"{get_id(vector.devicename, vector.name)}_vmessage"
+        vectormessage = vector.message
+        super().__init__(vectormessage, classes="vectormessage", id=this_id)
+
+    def watch_vmessage(self, vmessage):
+        if vmessage:
+            self.update(vmessage)
+
+
+
 class VectorPane(Container):
 
 
@@ -64,11 +94,13 @@ class VectorPane(Container):
         with Horizontal(classes="vectortitle"):
             yield Static(self.vector.label, classes="vectorlabel")
             with Horizontal(classes="vectorstate"):
-                yield Static("State: ", classes="autowidth" )
-                yield VectorState(self.vector.state)
+                yield Static("State:", classes="autowidth" )
+                yield VectorTime(self.vector)
+                yield VectorState(self.vector)
 
-        # create area for vector message
-        yield Static(self.vector.message, classes="vectormessage")
+        # create vector message
+        yield VectorMessage(self.vector)
+
 
         # show the vector members
         members = self.vector.members()
@@ -83,8 +115,6 @@ class VectorPane(Container):
                 yield NumberMemberPane(self.vector, member, classes="memberpane")
             if self.vector.vectortype == "BLOBVector":
                 yield BLOBMemberPane(self.vector, member, classes="memberpane")
-
-
 
 
 class GroupTabPane(TabPane):

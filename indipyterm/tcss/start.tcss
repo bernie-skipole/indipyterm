@@ -6,6 +6,10 @@
    dock: top;
    }
 
+.autowidth {
+    width: auto;
+    }
+
 StartSc {
 
         #startsc-grid {
@@ -106,6 +110,7 @@ VectorPane {
 
             .vectormessage {
                 margin-left: 1;
+                margin-right: 1;
                 height: 2;
                 }
 
@@ -123,9 +128,6 @@ VectorPane {
                     margin-right: 1;
                     }
 
-                .autowidth {
-                    width: auto;
-                    }
                  }
          }
 
