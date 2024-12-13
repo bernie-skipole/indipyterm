@@ -13,9 +13,46 @@ from .memberpn import SwitchMemberPane, TextMemberPane, LightMemberPane, NumberM
 
 
 
+class VectorState(Static):
+
+
+    vstate = reactive("")
+
+    def __init__(self, vectorstate):
+        super().__init__(vectorstate, classes="autowidth", id="vstate")
+        if vectorstate == "Ok":
+            self.styles.background = "darkgreen"
+            self.styles.color = "white"
+        elif vectorstate == "Alert":
+            self.styles.background = "red"
+            self.styles.color = "white"
+        elif vectorstate == "Busy":
+            self.styles.background = "yellow"
+            self.styles.color = "black"
+        elif vectorstate == "Idle":
+            self.styles.background = "black"
+            self.styles.color = "white"
+
+    def watch_vstate(self, vstate):
+        if vstate == "Ok":
+            self.styles.background = "darkgreen"
+            self.styles.color = "white"
+        elif vstate == "Alert":
+            self.styles.background = "red"
+            self.styles.color = "white"
+        elif vstate == "Busy":
+            self.styles.background = "yellow"
+            self.styles.color = "black"
+        elif vstate == "Idle":
+            self.styles.background = "black"
+            self.styles.color = "white"
+        else:
+            return
+        self.update(vstate)
+
+
 class VectorPane(Container):
 
-    vstate = reactive("Idle")
 
     def __init__(self, vector):
         self.vector = vector
@@ -24,25 +61,11 @@ class VectorPane(Container):
 
     def compose(self):
         "Draw the vector"
-        vectorstate = self.vector.state
         with Horizontal(classes="vectortitle"):
             yield Static(self.vector.label, classes="vectorlabel")
             with Horizontal(classes="vectorstate"):
                 yield Static("State: ", classes="autowidth" )
-                state = Static(vectorstate, classes="autowidth vstate")
-                if vectorstate == "Ok":
-                    state.styles.background = "darkgreen"
-                    state.styles.color = "white"
-                elif vectorstate == "Alert":
-                    state.styles.background = "red"
-                    state.styles.color = "white"
-                elif vectorstate == "Busy":
-                    state.styles.background = "yellow"
-                    state.styles.color = "black"
-                else:
-                    state.styles.background = "black"
-                    state.styles.color = "white"
-                yield state
+                yield VectorState(self.vector.state)
 
         # create area for vector message
         yield Static(self.vector.message, classes="vectormessage")
@@ -61,23 +84,7 @@ class VectorPane(Container):
             if self.vector.vectortype == "BLOBVector":
                 yield BLOBMemberPane(self.vector, member, classes="memberpane")
 
-    def watch_vstate(self, vstate):
-        state = self.query_one(".vstate")
-        if vstate == "Ok":
-            state.styles.background = "darkgreen"
-            state.styles.color = "white"
-        elif vstate == "Alert":
-            state.styles.background = "red"
-            state.styles.color = "white"
-        elif vstate == "Busy":
-            state.styles.background = "yellow"
-            state.styles.color = "black"
-        elif vstate == "Idle":
-            state.styles.background = "black"
-            state.styles.color = "white"
-        else:
-            return
-        state.update(vstate)
+
 
 
 class GroupTabPane(TabPane):

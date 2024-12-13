@@ -273,12 +273,13 @@ class _Connection:
         self.snapshot = item.snapshot
         snapshot = self.snapshot
 
-        if (item.eventtype == "Message") and (not item.devicename) and (not item.vectorname):
-            log = self.startsc.query_one("#system-messages")
-            log.clear()
-            messages = snapshot.messages
-            mlist = reversed([ localtimestring(t) + "  " + m for t,m in messages ])
-            log.write_lines(mlist)
+        #if (item.eventtype == "Message") and (not item.devicename) and (not item.vectorname):
+        #    log = self.startsc.query_one("#system-messages")
+        #    log.clear()
+        #    messages = snapshot.messages
+        #    mlist = reversed([ localtimestring(t) + "  " + m for t,m in messages ])
+        #    log.write_lines(mlist)
+
 
         if not item.devicename:
             # possible getProperties or system message which is handled above, just return
@@ -367,11 +368,15 @@ class _Connection:
         if not item.vectorname:
             return
 
-        vector_id = get_id(devicename, item.vectorname)
-        vectorpane = self.devicesc.query_one("#"+vector_id)
-        vectorpane.vstate = snapshot[devicename][item.vectorname].state
-        if item.eventtype == "state":
+        # Display the vector state
+
+        vectorstate = self.devicesc.query_one("#vstate")
+        vectorstate.vstate = snapshot[devicename][item.vectorname].state
+        if item.eventtype == "State":
+            # Only the state has changed, and that's dealt with
             return
+
+        # display timestamp
 
 
     def connect(self):
