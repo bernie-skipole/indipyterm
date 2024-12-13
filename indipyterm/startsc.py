@@ -15,20 +15,7 @@ class DevicePane(VerticalScroll):
 
     def compose(self):
         self.border_title = "Devices"
-        CONNECTION = get_connection()
-        if not CONNECTION.snapshot:
-            yield Static("No Devices found", id="no-devices")
-            return
-        devicefound = False
-        for devicename, device in CONNECTION.snapshot.items():
-            if device.enable:
-                devicefound = True
-                yield Button(devicename, name=devicename, variant="primary", classes="devices")
-                set_id(devicename)
-        if not devicefound:
-           yield Static("No Devices found", id="no-devices")
-
-
+        yield Static("No Devices found", id="no-devices")
 
     @on(Button.Pressed, ".devices")
     def choose_device(self, event):
@@ -93,14 +80,22 @@ class ConnectionPane(VerticalScroll):
 
     def on_button_pressed(self, event):
         CONNECTION = get_connection()
+        con_input = self.query_one("#con-input")
+        con_status = self.query_one("#con-status")
+        con_button = self.query_one("#con-button")
+
         if CONNECTION.host and CONNECTION.port:
             # call for disconnection
             CONNECTION.disconnect()
+            con_input.disabled = False
+            con_status.update("Host:Port not set")
+            con_button.label = "Connect"
         else:
             # call for connection
             CONNECTION.connect()
-        # and set up button labels
-        self.on_mount()
+            con_input.disabled = True
+            con_status.update(f"Current server : {CONNECTION.host}:{CONNECTION.port}")
+            con_button.label = "Disconnect"
 
 
 

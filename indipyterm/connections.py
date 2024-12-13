@@ -64,7 +64,7 @@ def get_devicegroups(devicename=None):
     if devicename not in snapshot:
         return
     device = snapshot[devicename]
-    groupset = set(vector.group for vector in device.values())
+    groupset = set(vector.group for vector in device.values() if vector.enable)
     if not groupset:
         return
     grouplist = list(groupset)
@@ -111,6 +111,7 @@ class _ItemID():
             raise KeyError("If a membername is specified, a vectorname must also be given")
         self._itemid += 1
         self._itemdict[devicename, vectorname, membername] = self._itemid
+        return self._itemid
 
     def unset(self, devicename, vectorname=None, membername=None):
         if not vectorname:
@@ -157,11 +158,13 @@ def get_id(devicename, vectorname=None, membername=None):
     return "id"+str(idnumber)
 
 def set_id(devicename, vectorname=None, membername=None):
-    "This is imported into the gui to create ids for widgets"
+    "This create ids for widgets, and returns the id"
     global _ITEMID
     idnumber = _ITEMID.get(devicename, vectorname, membername)
     if idnumber is None:
-        _ITEMID.set(devicename, vectorname, membername)
+        idnumber = _ITEMID.set(devicename, vectorname, membername)
+    return "id"+str(idnumber)
+
 
 
 def localtimestring(t):
@@ -303,6 +306,10 @@ class _Connection:
                 ########## todo, if devicename == item.devicename:recompose devicesc screen
             else:
                 # no vectorname, so delete entire device
+                deviceid = get_id(item.devicename)
+                if deviceid:
+                    device_pane = self.startsc.query_one("#device-pane")
+                    device_pane.remove_children(deviceid)
                 _ITEMID.unset(item.devicename)
                 vectornamelist = list(snapshot[item.devicename].keys())
                 for vectorname in vectornamelist:
@@ -313,17 +320,31 @@ class _Connection:
                 if devicename == item.devicename:
                     if not self.startsc.is_active:
                         self.app.push_screen('startsc')
-                    # else:
-                    #   recompose self.startsc
             return
 
-        # Has device got an id
-        did = get_id(item.devicename)
-        if not did:
-            device_pane = self.startsc.query_one("#device-pane")
-            device_pane.remove_children("#no-devices")
-            device_pane.mount(Button(item.devicename, name=item.devicename, variant="primary", classes="devices"))
-            set_id(item.devicename)
+        # add device to startsc on receiving a definition
+        if (item.eventtype == "Define" or item.eventtype == "DefineBLOB"):
+            # does this device have an id
+            if not get_id(item.devicename):
+                deviceid = set_id(item.devicename)
+                device_pane = self.startsc.query_one("#device-pane")
+                device_pane.remove_children("#no-devices")
+                device_pane.mount(Button(item.devicename, name=item.devicename, variant="primary", classes="devices", id=deviceid))
+                # give the vector an id
+                set_id(item.devicename, item.vectorname)
+                # give every member an id
+                membernamelist = list(snapshot[item.devicename][item.vectorname].keys())
+                for membername in membernamelist:
+                    set_id(item.devicename, item.vectorname, membername)
+
+            elif not get_id(item.devicename, item.vectorname):
+                # known device, but new vector, give the vector an id   ########### todo: add device/vector widget, if device being displayed
+                set_id(item.devicename, item.vectorname)
+                # give every member an id
+                membernamelist = list(snapshot[item.devicename][item.vectorname].keys())
+                for membername in membernamelist:
+                    set_id(item.devicename, item.vectorname, membername)
+
 
         if item.devicename != devicename:
             # This device is not currently being shown
@@ -343,12 +364,14 @@ class _Connection:
                 mlist = reversed([ localtimestring(t) + "  " + m for t,m in messages ])
                 log.write_lines(mlist)
 
-        # check item.eventtype == state - so just vector state updated
+        if not item.vectorname:
+            return
 
-        # if vector has no id, recompose devicesc
-        # if member has no id, recompose vectorpanel
-        # if full id available, recompose member - including vector state
-
+        vector_id = get_id(devicename, item.vectorname)
+        vectorpane = self.devicesc.query_one("#"+vector_id)
+        vectorpane.vstate = snapshot[devicename][item.vectorname].state
+        if item.eventtype == "state":
+            return
 
 
     def connect(self):

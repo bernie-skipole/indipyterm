@@ -15,7 +15,7 @@ from .memberpn import SwitchMemberPane, TextMemberPane, LightMemberPane, NumberM
 
 class VectorPane(Container):
 
-    vstate = reactive("Alert")
+    vstate = reactive("Idle")
 
     def __init__(self, vector):
         self.vector = vector
@@ -36,9 +36,12 @@ class VectorPane(Container):
                 elif vectorstate == "Alert":
                     state.styles.background = "red"
                     state.styles.color = "white"
-                if vectorstate == "Busy":
+                elif vectorstate == "Busy":
                     state.styles.background = "yellow"
                     state.styles.color = "black"
+                else:
+                    state.styles.background = "black"
+                    state.styles.color = "white"
                 yield state
 
         # create area for vector message
@@ -66,9 +69,14 @@ class VectorPane(Container):
         elif vstate == "Alert":
             state.styles.background = "red"
             state.styles.color = "white"
-        if vstate == "Busy":
+        elif vstate == "Busy":
             state.styles.background = "yellow"
             state.styles.color = "black"
+        elif vstate == "Idle":
+            state.styles.background = "black"
+            state.styles.color = "white"
+        else:
+            return
         state.update(vstate)
 
 
