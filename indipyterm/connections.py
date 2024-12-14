@@ -346,6 +346,11 @@ class _Connection:
                 for membername in membernamelist:
                     set_id(item.devicename, item.vectorname, membername)
 
+
+        if (self.devicesc is None) or self.startsc.is_active:
+            # no devicesc shown so return
+            return
+
         if item.devicename != devicename:
             # This device is not currently being shown
             # no need to update any widgets

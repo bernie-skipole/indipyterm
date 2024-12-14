@@ -13,15 +13,13 @@ from textual.containers import Container, VerticalScroll
 from .connections import get_connection
 
 from .startsc import StartSc
-from .devicesc import DeviceSc
 
 
 
 class IPyTerm(App):
     """An INDI terminal."""
 
-    SCREENS = {"startsc": StartSc,
-               "devicesc": DeviceSc}
+    SCREENS = {"startsc": StartSc}
 
     BINDINGS = [("q", "quit", "Quit"), ("d", "toggle_dark", "Toggle dark mode")]
 
@@ -33,7 +31,6 @@ class IPyTerm(App):
         self.push_screen('startsc')
         CONNECTION.app = self
         CONNECTION.startsc = self.get_screen('startsc', StartSc)
-        CONNECTION.devicesc = self.get_screen("devicesc", DeviceSc)
         # Check the RXQUE every 0.1 of a second
         self.set_interval(1 / 10, CONNECTION.check_rxque)
 

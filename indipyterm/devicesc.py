@@ -11,33 +11,22 @@ from .connections import get_connection, get_devicename, get_devicemessages
 from .grouppn import GroupPane
 
 
-class DevHead(Static):
-
-    devicename = reactive(get_devicename)
-
-    def watch_devicename(self, devicename:str) -> None:
-        self.update(devicename)
-
 
 class MessageLog(Log):
 
-    devicename = reactive(get_devicename)
-
-    def watch_devicename(self, devicename:str) -> None:
+    def on_mount(self):
         self.clear()
-        mlist = get_devicemessages(devicename)
+        mlist = get_devicemessages()
         if mlist:
             self.write_lines(mlist)
         else:
-            self.write(f"Messages from {devicename} will appear here")
+            self.write(f"Messages from {get_devicename()} will appear here")
 
 
 class MessagesPane(VerticalScroll):
 
-    devicename = reactive(get_devicename)
-
     def compose(self) -> ComposeResult:
-        yield MessageLog(id="device-messages").data_bind(MessagesPane.devicename)
+        yield MessageLog(id="device-messages")
 
     def on_mount(self):
         self.border_title = "Device Messages"
@@ -53,18 +42,20 @@ class DeviceSc(Screen):
 
     BINDINGS = [("m", "main", "Main Screen")]
 
-    devicename = reactive(get_devicename)
 
     def compose(self) -> ComposeResult:
-        yield DevHead(id="devicename").data_bind(DeviceSc.devicename)
+        devicename = get_devicename()
+        yield Static(devicename, id="devicename")
         yield Footer()
-        yield MessagesPane(id="dev-messages-pane").data_bind(DeviceSc.devicename)
-        yield GroupPane(id="dev-group-pane").data_bind(DeviceSc.devicename)
-
+        yield MessagesPane(id="dev-messages-pane")
+        yield GroupPane(id="dev-group-pane")
 
     def action_main(self) -> None:
         """Event handler called when m pressed."""
-        self.app.push_screen('startsc')
+        CONNECTION = get_connection()
+        CONNECTION.devicesc = None
+        self.app.pop_screen()
+
 
     def action_show_tab(self, tab: str) -> None:
         """Switch to a new tab."""

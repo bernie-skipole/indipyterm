@@ -86,8 +86,8 @@ class VectorPane(Container):
 
     def __init__(self, vector):
         self.vector = vector
-        vector_id = get_id(vector.devicename, vector.name)
-        super().__init__(id=vector_id)
+        self.vector_id = get_id(vector.devicename, vector.name)
+        super().__init__(id=self.vector_id)
 
     def compose(self):
         "Draw the vector"
@@ -100,7 +100,6 @@ class VectorPane(Container):
 
         # create vector message
         yield VectorMessage(self.vector)
-
 
         # show the vector members
         members = self.vector.members()
@@ -116,37 +115,41 @@ class VectorPane(Container):
             if self.vector.vectortype == "BLOBVector":
                 yield BLOBMemberPane(self.vector, member, classes="memberpane")
 
+        with Container():
+            yield Button("Submit", id=self.vector_id+"_submit", classes="vectorsubmit")
+
 
 class GroupTabPane(TabPane):
 
-    def __init__(self, tabtitle, devicename, groupname):
-        self.devicename = devicename
+    def __init__(self, tabtitle, groupname):
         self.groupname = groupname
         super().__init__(tabtitle)
 
     def compose(self):
         "For every vector draw it"
         snapshot = get_connection().snapshot
-        vectors = list(vector for vector in snapshot[self.devicename].values() if vector.group == self.groupname)
+        devicename = get_devicename()
+        vectors = list(vector for vector in snapshot[devicename].values() if vector.group == self.groupname)
         totalnumber = len(vectors)
         vnumber = 0
-        for vector in vectors:
-            vnumber += 1
-            yield VectorPane(vector)
-            if vnumber != totalnumber:
-                # if multiple vectors, add a rule between
-                yield Rule()
+        with VerticalScroll():
+            for vector in vectors:
+                vnumber += 1
+                yield VectorPane(vector)
+                if vnumber != totalnumber:
+                    # if multiple vectors, add a rule between
+                    yield Rule()
 
 
-class GroupPane(VerticalScroll):
-
-    devicename = reactive(get_devicename, recompose=True)
+class GroupPane(Container):
 
     def compose(self):
-        grouplist = get_devicegroups(self.devicename)
+        grouplist = get_devicegroups()
         with TabbedContent():
             for groupname in grouplist:
-                yield GroupTabPane(groupname, devicename=self.devicename, groupname=groupname)
+                yield GroupTabPane(groupname, groupname=groupname)
+
+
 
 
 #  how to add and remove groups?

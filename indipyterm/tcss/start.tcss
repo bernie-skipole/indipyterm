@@ -129,6 +129,14 @@ VectorPane {
                     }
 
                  }
+
+              .vectorsubmit {
+                    dock: right;
+                    width: auto;
+                    margin-right: 4;
+                 }
+
+
          }
 
 

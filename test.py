@@ -12,12 +12,20 @@ class LED:
     def __init__(self, pin):
         self.pin = pin
         self.is_lit = False
+        self._messagelist = ("one", "two", "three")
+        self._n = 0
 
     def on(self):
         self.is_lit = True
 
     def off(self):
         self.is_lit = False
+
+    def get_message(self):
+        self._n += 1
+        if self._n > 2:
+            self._n = 0
+        return self._messagelist[self._n]
 
 
 class _LEDDriver(ipd.IPyDriver):
@@ -50,11 +58,11 @@ class _LEDDriver(ipd.IPyDriver):
                 # and set this new value into the vector
                 event.vector["ledmember"] = ledvalue
                 # send the updated vector back to the client
-                await event.vector.send_setVector()
+                await event.vector.send_setVector(message = ledobject.get_message())
                 # and send a new text vector
                 textvector = self[event.devicename]["ledtextvector"]
                 textvector["ledtextmember"] = ledvalue
-                await textvector.send_setVector()
+                await textvector.send_setVector(message = ledobject.get_message())
 
 
 def make_driver(*pins):

@@ -10,6 +10,8 @@ from textual.containers import Container, HorizontalScroll, VerticalScroll, Cent
 
 from .connections import get_connection, get_devicename, set_devicename, get_id, set_id
 
+from .devicesc import DeviceSc
+
 
 class DevicePane(VerticalScroll):
 
@@ -33,9 +35,8 @@ class DevicePane(VerticalScroll):
             # This device is disabled
             return
         set_devicename(devicename)
-        devicesc = self.app.get_screen("devicesc")
-        devicesc.devicename = devicename
-        self.app.push_screen("devicesc")
+        CONNECTION.devicesc = DeviceSc()
+        self.app.push_screen(CONNECTION.devicesc)
 
 
 class BlobPane(HorizontalScroll):
@@ -98,7 +99,6 @@ class ConnectionPane(VerticalScroll):
             con_button.label = "Disconnect"
 
 
-
 class ConInput(Input):
 
     def on_blur(self, event):
@@ -109,7 +109,6 @@ class ConInput(Input):
 
     def action_submit(self):
         self.screen.focus_next('*')
-
 
 
 class BlobInput(Input):
@@ -129,7 +128,6 @@ class BlobInput(Input):
 
     def action_submit(self):
         self.screen.focus_next('*')
-
 
 
 
