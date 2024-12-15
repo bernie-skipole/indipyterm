@@ -45,10 +45,11 @@ class DeviceSc(Screen):
 
     def compose(self) -> ComposeResult:
         devicename = get_devicename()
-        yield Static(devicename, id="devicename")
-        yield Footer()
-        yield MessagesPane(id="dev-messages-pane")
-        yield GroupPane(id="dev-group-pane")
+        with VerticalScroll(id="devicesc"):
+            yield Static(devicename, id="devicename")
+            yield Footer()
+            yield MessagesPane(id="dev-messages-pane")
+            yield GroupPane(id="dev-group-pane")
 
     def action_main(self) -> None:
         """Event handler called when m pressed."""

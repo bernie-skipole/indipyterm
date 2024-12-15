@@ -13,7 +13,7 @@ from .connections import get_connection, get_devicename, set_devicename, get_id,
 from .devicesc import DeviceSc
 
 
-class DevicePane(VerticalScroll):
+class DevicePane(Container):
 
     def compose(self):
         self.border_title = "Devices"
@@ -41,6 +41,10 @@ class DevicePane(VerticalScroll):
 
 class BlobPane(HorizontalScroll):
 
+
+    def compose(self):
+        yield BlobInput(placeholder="Set a Folder to receive BLOBs", id="blob-input")
+
     def on_mount(self):
         self.border_title = "Set BLOB folder"
         CONNECTION = get_connection()
@@ -50,14 +54,14 @@ class BlobPane(HorizontalScroll):
             self.border_subtitle = "Received BLOBs disabled"
 
 
-class MessagesPane(VerticalScroll):
+class MessagesPane(Container):
 
     def compose(self):
         self.border_title = "System Messages"
         yield Log(id="system-messages")
 
 
-class ConnectionPane(VerticalScroll):
+class ConnectionPane(Container):
 
     def compose(self):
         self.border_title = "Set INDI Server"
@@ -113,9 +117,6 @@ class ConInput(Input):
 
 class BlobInput(Input):
 
-    def compose(self):
-        yield BlobInput(placeholder="Set a Folder to receive BLOBs", id="blob-input")
-
     def on_blur(self, event):
         CONNECTION = get_connection()
         blobfolder = CONNECTION.checkblobfolder(self.value)
@@ -131,6 +132,9 @@ class BlobInput(Input):
 
 
 
+
+
+
 class StartSc(Screen):
     """The top start screen."""
 
@@ -141,7 +145,7 @@ class StartSc(Screen):
     def compose(self) -> ComposeResult:
         yield Static("INDI Terminal", id="title")
         yield Footer()
-        with Container(id="startsc-grid"):
+        with VerticalScroll(id="startsc-grid"):
             yield DevicePane(id="device-pane")
             yield ConnectionPane(id="con-pane")
             yield BlobPane(id="blob-pane")
