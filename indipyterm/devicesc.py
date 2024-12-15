@@ -14,6 +14,7 @@ from .grouppn import GroupPane
 
 class MessageLog(Log):
 
+
     def on_mount(self):
         self.clear()
         mlist = get_devicemessages()
@@ -23,7 +24,7 @@ class MessageLog(Log):
             self.write(f"Messages from {get_devicename()} will appear here")
 
 
-class MessagesPane(VerticalScroll):
+class MessagesPane(Container):
 
     def compose(self) -> ComposeResult:
         yield MessageLog(id="device-messages")
@@ -45,11 +46,10 @@ class DeviceSc(Screen):
 
     def compose(self) -> ComposeResult:
         devicename = get_devicename()
-        with VerticalScroll(id="devicesc"):
-            yield Static(devicename, id="devicename")
-            yield Footer()
-            yield MessagesPane(id="dev-messages-pane")
-            yield GroupPane(id="dev-group-pane")
+        yield Static(devicename, id="devicename")
+        yield Footer()
+        yield MessagesPane(id="dev-messages-pane")
+        yield GroupPane(id="dev-group-pane")
 
     def action_main(self) -> None:
         """Event handler called when m pressed."""

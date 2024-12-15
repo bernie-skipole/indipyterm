@@ -88,11 +88,13 @@ class VectorPane(Container):
         self.vector = vector
         self.vector_id = get_id(vector.devicename, vector.name)
         super().__init__(id=self.vector_id)
+        # this variable sets the height of the pane
+        self.pane_height = 8
 
     def compose(self):
         "Draw the vector"
-        with Horizontal(classes="vectortitle"):
-            yield Static(self.vector.label, classes="vectorlabel")
+        self.border_title = self.vector.label
+        with Container():
             with Horizontal(classes="vectorstate"):
                 yield Static("State:", classes="autowidth" )
                 yield VectorTime(self.vector)
@@ -105,18 +107,33 @@ class VectorPane(Container):
         members = self.vector.members()
         for member in members.values():
             if self.vector.vectortype == "SwitchVector":
-                yield SwitchMemberPane(self.vector, member, classes="memberpane")
+                switchmember = SwitchMemberPane(self.vector, member, classes="memberpane")
+                self.pane_height += switchmember.pane_height
+                yield switchmember
             if self.vector.vectortype == "TextVector":
-                yield TextMemberPane(self.vector, member, classes="memberpane")
+                textmember =  TextMemberPane(self.vector, member, classes="memberpane")
+                self.pane_height += textmember.pane_height
+                yield textmember
             if self.vector.vectortype == "LightVector":
-                yield LightMemberPane(self.vector, member, classes="memberpane")
+                lightmember = LightMemberPane(self.vector, member, classes="memberpane")
+                self.pane_height += lightmember.pane_height
+                yield lightmember
             if self.vector.vectortype == "NumberVector":
-                yield NumberMemberPane(self.vector, member, classes="memberpane")
+                numbermember = NumberMemberPane(self.vector, member, classes="memberpane")
+                self.pane_height += numbermember.pane_height
+                yield numbermember
             if self.vector.vectortype == "BLOBVector":
-                yield BLOBMemberPane(self.vector, member, classes="memberpane")
+                blobmember = BLOBMemberPane(self.vector, member, classes="memberpane")
+                self.pane_height += blobmember.pane_height
+                yield blobmember
 
         with Container():
             yield Button("Submit", id=self.vector_id+"_submit", classes="vectorsubmit")
+
+    def on_mount(self):
+        # must set the height of the vector pane
+        self.styles.height = 15
+
 
 
 class GroupTabPane(TabPane):
@@ -148,7 +165,6 @@ class GroupPane(Container):
         with TabbedContent():
             for groupname in grouplist:
                 yield GroupTabPane(groupname, groupname=groupname)
-
 
 
 

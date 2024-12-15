@@ -15,7 +15,8 @@ class SwitchMemberPane(VerticalScroll):
         self.member = member
         self.vector = vector
         super().__init__(classes=classes, id=get_id(vector.devicename, vector.name, member.name))
-
+        # this variable sets the height of the pane
+        self.pane_height = 8
 
     def compose(self):
         "Draw the member"
@@ -30,6 +31,8 @@ class TextMemberPane(VerticalScroll):
         self.member = member
         self.vector = vector
         super().__init__(classes=classes, id=get_id(vector.devicename, vector.name, member.name))
+        # this variable sets the height of the pane
+        self.pane_height = 8
 
     def compose(self):
         "Draw the member"
@@ -43,7 +46,8 @@ class LightMemberPane(VerticalScroll):
         self.member = member
         self.vector = vector
         super().__init__(classes=classes, id=get_id(vector.devicename, vector.name, member.name))
-
+        # this variable sets the height of the pane
+        self.pane_height = 8
 
     def compose(self):
         "Draw the member"
@@ -57,6 +61,8 @@ class NumberMemberPane(VerticalScroll):
         self.member = member
         self.vector = vector
         super().__init__(classes=classes, id=get_id(vector.devicename, vector.name, member.name))
+        # this variable sets the height of the pane
+        self.pane_height = 8
 
     def compose(self):
         "Draw the member"
@@ -69,7 +75,8 @@ class BLOBMemberPane(VerticalScroll):
         self.member = member
         self.vector = vector
         super().__init__(classes=classes, id=get_id(vector.devicename, vector.name, member.name))
-
+        # this variable sets the height of the pane
+        self.pane_height = 8
 
     def compose(self):
         "Draw the member"

@@ -41,7 +41,6 @@ class DevicePane(Container):
 
 class BlobPane(HorizontalScroll):
 
-
     def compose(self):
         yield BlobInput(placeholder="Set a Folder to receive BLOBs", id="blob-input")
 
@@ -129,9 +128,6 @@ class BlobInput(Input):
 
     def action_submit(self):
         self.screen.focus_next('*')
-
-
-
 
 
 
