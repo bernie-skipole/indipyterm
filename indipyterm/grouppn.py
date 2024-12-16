@@ -16,13 +16,21 @@ from textual.widget import Widget
 
 class VectorTime(Static):
 
+    DEFAULT_CSS = """
+        VectorTime {
+            margin-left: 1;
+            margin-right: 1;
+            width: auto;
+        }
+        """
+
     vtime = reactive("")
 
     def __init__(self, vector):
         this_id = f"{get_id(vector.devicename, vector.name)}_vtime"
         vectortime = localtimestring(vector.timestamp)
-        super().__init__(vectortime, classes="autowidth", id=this_id)
-        self.styles.margin = (0,1,0,1)   # margin 1 on left and right
+        super().__init__(vectortime, id=this_id)
+
 
     def watch_vtime(self, vtime):
         if vtime:
@@ -31,12 +39,19 @@ class VectorTime(Static):
 
 class VectorState(Static):
 
+    DEFAULT_CSS = """
+        VectorState {
+            margin-right: 1;
+            width: auto;
+        }
+        """
+
     vstate = reactive("")
 
     def __init__(self, vector):
         this_id = f"{get_id(vector.devicename, vector.name)}_vstate"
         vectorstate = vector.state
-        super().__init__(vectorstate, classes="autowidth", id=this_id)
+        super().__init__(vectorstate, id=this_id)
         if vectorstate == "Ok":
             self.styles.background = "darkgreen"
             self.styles.color = "white"
@@ -88,6 +103,7 @@ class VectorTimeState(Widget):
         VectorTimeState {
             layout: horizontal;
             height: 1;
+            width: auto;
         }
 
         VectorTimeState > Static {
@@ -112,11 +128,17 @@ class VectorPane(Widget):
         VectorPane {
             layout: vertical;
             height: auto;
-        }
-        VectorPane > Button {
-            text-align: center;
-            width: 100%;
-        }
+            background: $panel;
+            border: blue;
+            }
+        VectorPane > Container {
+            align: right top;
+            height: auto;
+            }
+        VectorPane > Container > Button {
+            margin-right: 1;
+            width: auto;
+            }
         """
 
 
@@ -130,7 +152,8 @@ class VectorPane(Widget):
         "Draw the vector"
         self.border_title = self.vector.label
 
-        yield VectorTimeState(self.vector)
+        with Container():
+            yield VectorTimeState(self.vector)
 
         # create vector message
         yield VectorMessage(self.vector)
@@ -149,8 +172,8 @@ class VectorPane(Widget):
             if self.vector.vectortype == "BLOBVector":
                 yield BLOBMemberPane(self.vector, member, classes="memberpane")
 
-        yield Button("Submit", id=self.vector_id+"_submit")
-
+        with Container():
+            yield Button("Submit", id=self.vector_id+"_submit")
 
 
 
@@ -165,16 +188,10 @@ class GroupTabPane(TabPane):
         "For every vector draw it"
         snapshot = get_connection().snapshot
         devicename = get_devicename()
-        vectors = list(vector for vector in snapshot[devicename].values() if vector.group == self.groupname)
-        totalnumber = len(vectors)
-        vnumber = 0
+        vectors = list(vector for vector in snapshot[devicename].values() if vector.group == self.groupname and vector.enable)
         with VerticalScroll():
             for vector in vectors:
-                vnumber += 1
                 yield VectorPane(vector)
-                if vnumber != totalnumber:
-                    # if multiple vectors, add a rule between
-                    yield Rule()
 
 
 class GroupPane(Container):

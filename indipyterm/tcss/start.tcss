@@ -97,18 +97,6 @@
     }
 
 
-VectorPane {
-    background: $panel;
-    border: blue;
-    }
-
-.vectorstate {
-    dock: right;
-    width: auto;
-    margin-right: 1;
-    height: 1;
-    }
-
 .vectormessage {
     margin-left: 1;
     margin-right: 1;
