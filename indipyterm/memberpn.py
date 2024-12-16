@@ -8,15 +8,23 @@ from textual.containers import Container, Horizontal, VerticalScroll, Center
 
 from .connections import get_connection, get_devicename, get_devicemessages, get_devicegroups, get_id
 
+from textual.widget import Widget
 
-class SwitchMemberPane(VerticalScroll):
+
+class SwitchMemberPane(Widget):
+
+    DEFAULT_CSS = """
+        SwitchMemberPane {
+            layout: vertical;
+            height: auto;
+        }
+        """
 
     def __init__(self, vector, member, classes):
         self.member = member
         self.vector = vector
         super().__init__(classes=classes, id=get_id(vector.devicename, vector.name, member.name))
-        # this variable sets the height of the pane
-        self.pane_height = 8
+
 
     def compose(self):
         "Draw the member"
@@ -25,14 +33,20 @@ class SwitchMemberPane(VerticalScroll):
 
 
 
-class TextMemberPane(VerticalScroll):
+class TextMemberPane(Widget):
+
+    DEFAULT_CSS = """
+        TextMemberPane {
+            layout: vertical;
+            height: auto;
+        }
+        """
 
     def __init__(self, vector, member, classes):
         self.member = member
         self.vector = vector
         super().__init__(classes=classes, id=get_id(vector.devicename, vector.name, member.name))
-        # this variable sets the height of the pane
-        self.pane_height = 8
+
 
     def compose(self):
         "Draw the member"
@@ -40,14 +54,20 @@ class TextMemberPane(VerticalScroll):
 
 
 
-class LightMemberPane(VerticalScroll):
+class LightMemberPane(Widget):
+
+    DEFAULT_CSS = """
+        LightMemberPane {
+            layout: vertical;
+            height: auto;
+        }
+        """
 
     def __init__(self, vector, member, classes):
         self.member = member
         self.vector = vector
         super().__init__(classes=classes, id=get_id(vector.devicename, vector.name, member.name))
-        # this variable sets the height of the pane
-        self.pane_height = 8
+
 
     def compose(self):
         "Draw the member"
@@ -55,28 +75,40 @@ class LightMemberPane(VerticalScroll):
 
 
 
-class NumberMemberPane(VerticalScroll):
+class NumberMemberPane(Widget):
+
+    DEFAULT_CSS = """
+        NumberMemberPane {
+            layout: vertical;
+            height: auto;
+        }
+        """
 
     def __init__(self, vector, member, classes):
         self.member = member
         self.vector = vector
         super().__init__(classes=classes, id=get_id(vector.devicename, vector.name, member.name))
-        # this variable sets the height of the pane
-        self.pane_height = 8
+
 
     def compose(self):
         "Draw the member"
         yield Static(self.member.label)
 
 
-class BLOBMemberPane(VerticalScroll):
+class BLOBMemberPane(Widget):
+
+    DEFAULT_CSS = """
+        BLOBMemberPane {
+            layout: vertical;
+            height: auto;
+        }
+        """
 
     def __init__(self, vector, member, classes):
         self.member = member
         self.vector = vector
         super().__init__(classes=classes, id=get_id(vector.devicename, vector.name, member.name))
-        # this variable sets the height of the pane
-        self.pane_height = 8
+
 
     def compose(self):
         "Draw the member"

@@ -11,6 +11,8 @@ from .connections import get_connection, get_devicename, get_devicemessages, get
 
 from .memberpn import SwitchMemberPane, TextMemberPane, LightMemberPane, NumberMemberPane, BLOBMemberPane
 
+from textual.widget import Widget
+
 
 class VectorTime(Static):
 
@@ -80,25 +82,55 @@ class VectorMessage(Static):
             self.update(vmessage)
 
 
+class VectorTimeState(Widget):
 
-class VectorPane(Container):
+    DEFAULT_CSS = """
+        VectorTimeState {
+            layout: horizontal;
+            height: 1;
+        }
+
+        VectorTimeState > Static {
+             width: auto;
+        }
+        """
+
+    def __init__(self, vector):
+        self.vector = vector
+        super().__init__()
+
+    def compose(self):
+        "Draw the timestamp and state"
+        yield Static("State:")
+        yield VectorTime(self.vector)
+        yield VectorState(self.vector)
+
+
+class VectorPane(Widget):
+
+    DEFAULT_CSS = """
+        VectorPane {
+            layout: vertical;
+            height: auto;
+        }
+        VectorPane > Button {
+            text-align: center;
+            width: 100%;
+        }
+        """
 
 
     def __init__(self, vector):
         self.vector = vector
         self.vector_id = get_id(vector.devicename, vector.name)
         super().__init__(id=self.vector_id)
-        # this variable sets the height of the pane
-        self.pane_height = 8
+
 
     def compose(self):
         "Draw the vector"
         self.border_title = self.vector.label
-        with Container():
-            with Horizontal(classes="vectorstate"):
-                yield Static("State:", classes="autowidth" )
-                yield VectorTime(self.vector)
-                yield VectorState(self.vector)
+
+        yield VectorTimeState(self.vector)
 
         # create vector message
         yield VectorMessage(self.vector)
@@ -107,32 +139,19 @@ class VectorPane(Container):
         members = self.vector.members()
         for member in members.values():
             if self.vector.vectortype == "SwitchVector":
-                switchmember = SwitchMemberPane(self.vector, member, classes="memberpane")
-                self.pane_height += switchmember.pane_height
-                yield switchmember
+                yield SwitchMemberPane(self.vector, member, classes="memberpane")
             if self.vector.vectortype == "TextVector":
-                textmember =  TextMemberPane(self.vector, member, classes="memberpane")
-                self.pane_height += textmember.pane_height
-                yield textmember
+                yield TextMemberPane(self.vector, member, classes="memberpane")
             if self.vector.vectortype == "LightVector":
-                lightmember = LightMemberPane(self.vector, member, classes="memberpane")
-                self.pane_height += lightmember.pane_height
-                yield lightmember
+                yield LightMemberPane(self.vector, member, classes="memberpane")
             if self.vector.vectortype == "NumberVector":
-                numbermember = NumberMemberPane(self.vector, member, classes="memberpane")
-                self.pane_height += numbermember.pane_height
-                yield numbermember
+                yield NumberMemberPane(self.vector, member, classes="memberpane")
             if self.vector.vectortype == "BLOBVector":
-                blobmember = BLOBMemberPane(self.vector, member, classes="memberpane")
-                self.pane_height += blobmember.pane_height
-                yield blobmember
+                yield BLOBMemberPane(self.vector, member, classes="memberpane")
 
-        with Container():
-            yield Button("Submit", id=self.vector_id+"_submit", classes="vectorsubmit")
+        yield Button("Submit", id=self.vector_id+"_submit")
 
-    def on_mount(self):
-        # must set the height of the vector pane
-        self.styles.height = 15
+
 
 
 
