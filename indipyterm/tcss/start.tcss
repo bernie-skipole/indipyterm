@@ -96,14 +96,6 @@
     min-height: 10;
     }
 
-
-.vectormessage {
-    margin-left: 1;
-    margin-right: 1;
-    height: 2;
-    }
-
-
 .memberpane {
     background: $panel;
     margin-left: 1;

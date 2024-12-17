@@ -14,6 +14,7 @@ from .memberpn import SwitchMemberPane, TextMemberPane, LightMemberPane, NumberM
 from textual.widget import Widget
 
 
+
 class VectorTime(Static):
 
     DEFAULT_CSS = """
@@ -26,10 +27,9 @@ class VectorTime(Static):
 
     vtime = reactive("")
 
-    def __init__(self, vector):
-        this_id = f"{get_id(vector.devicename, vector.name)}_vtime"
-        vectortime = localtimestring(vector.timestamp)
-        super().__init__(vectortime, id=this_id)
+    def __init__(self, vectortimestamp):
+        vectortime = localtimestring(vectortimestamp)
+        super().__init__(vectortime)
 
 
     def watch_vtime(self, vtime):
@@ -43,15 +43,13 @@ class VectorState(Static):
         VectorState {
             margin-right: 1;
             width: auto;
-        }
+            }
         """
 
     vstate = reactive("")
 
-    def __init__(self, vector):
-        this_id = f"{get_id(vector.devicename, vector.name)}_vstate"
-        vectorstate = vector.state
-        super().__init__(vectorstate, id=this_id)
+    def __init__(self, vectorstate):
+        super().__init__(vectorstate)
         if vectorstate == "Ok":
             self.styles.background = "darkgreen"
             self.styles.color = "white"
@@ -83,33 +81,23 @@ class VectorState(Static):
         self.update(vstate)
 
 
-class VectorMessage(Static):
-
-    vmessage = reactive("")
-
-    def __init__(self, vector):
-        this_id = f"{get_id(vector.devicename, vector.name)}_vmessage"
-        vectormessage = vector.message
-        super().__init__(vectormessage, classes="vectormessage", id=this_id)
-
-    def watch_vmessage(self, vmessage):
-        if vmessage:
-            self.update(vmessage)
-
 
 class VectorTimeState(Widget):
 
     DEFAULT_CSS = """
         VectorTimeState {
             layout: horizontal;
+            align: right top;
             height: 1;
-            width: auto;
-        }
+            }
 
         VectorTimeState > Static {
-             width: auto;
-        }
+            width: auto;
+            }
         """
+
+    vtime = reactive("")
+    vstate = reactive("")
 
     def __init__(self, vector):
         self.vector = vector
@@ -118,8 +106,25 @@ class VectorTimeState(Widget):
     def compose(self):
         "Draw the timestamp and state"
         yield Static("State:")
-        yield VectorTime(self.vector)
-        yield VectorState(self.vector)
+        yield VectorTime(self.vector.timestamp).data_bind(VectorTimeState.vtime)
+        yield VectorState(self.vector.state).data_bind(VectorTimeState.vstate)
+
+
+class VectorMessage(Static):
+
+    DEFAULT_CSS = """
+        VectorMessage {
+            margin-left: 1;
+            margin-right: 1;
+            height: 2;
+            }
+        """
+
+    vmessage = reactive("")
+
+    def watch_vmessage(self, vmessage):
+        if vmessage:
+            self.update(vmessage)
 
 
 class VectorPane(Widget):
@@ -131,15 +136,19 @@ class VectorPane(Widget):
             background: $panel;
             border: blue;
             }
-        VectorPane > Container {
+        VectorPane > .submitbutton {
             align: right top;
             height: auto;
             }
-        VectorPane > Container > Button {
+        VectorPane > .submitbutton > Button {
             margin-right: 1;
             width: auto;
             }
         """
+
+    vtime = reactive("")
+    vstate = reactive("")
+    vmessage = reactive("")
 
 
     def __init__(self, vector):
@@ -152,11 +161,14 @@ class VectorPane(Widget):
         "Draw the vector"
         self.border_title = self.vector.label
 
-        with Container():
-            yield VectorTimeState(self.vector)
+        vts = VectorTimeState(self.vector)
+        vts.data_bind(VectorPane.vtime)
+        vts.data_bind(VectorPane.vstate)
+
+        yield vts
 
         # create vector message
-        yield VectorMessage(self.vector)
+        yield VectorMessage(self.vector.message).data_bind(VectorPane.vmessage)
 
         # show the vector members
         members = self.vector.members()
@@ -172,9 +184,8 @@ class VectorPane(Widget):
             if self.vector.vectortype == "BLOBVector":
                 yield BLOBMemberPane(self.vector, member, classes="memberpane")
 
-        with Container():
+        with Container(classes="submitbutton"):
             yield Button("Submit", id=self.vector_id+"_submit")
-
 
 
 

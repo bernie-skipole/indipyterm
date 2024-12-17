@@ -371,22 +371,18 @@ class _Connection:
         if not item.vectorname:
             return
 
-        # display the vector timestamp
-        vtimewidget = self.devicesc.query_one(f"#{get_id(devicename, item.vectorname)}_vtime")
-        vtimewidget.vtime = localtimestring(snapshot[devicename][item.vectorname].timestamp)
+        # display the vector timestamp and state
 
-        # Display the vector state
-        vstatewidget = self.devicesc.query_one(f"#{get_id(devicename, item.vectorname)}_vstate")
-        vstatewidget.vstate = snapshot[devicename][item.vectorname].state
+        vectorpane = self.devicesc.query_one(f"#{get_id(devicename, item.vectorname)}")
+        vectorpane.vtime = localtimestring(snapshot[devicename][item.vectorname].timestamp)
+        vectorpane.vstate = snapshot[devicename][item.vectorname].state
+
         if item.eventtype == "State":
             # Only the state has changed, and that's dealt with
             return
 
         # Display vector message
-        vmesswidget = self.devicesc.query_one(f"#{get_id(devicename, item.vectorname)}_vmessage")
-        vmesswidget.vmessage = snapshot[devicename][item.vectorname].message
-
-
+        vectorpane.vmessage = snapshot[devicename][item.vectorname].message
 
 
 
