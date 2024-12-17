@@ -174,15 +174,15 @@ class VectorPane(Widget):
         members = self.vector.members()
         for member in members.values():
             if self.vector.vectortype == "SwitchVector":
-                yield SwitchMemberPane(self.vector, member, classes="memberpane")
+                yield SwitchMemberPane(self.vector, member)
             if self.vector.vectortype == "TextVector":
-                yield TextMemberPane(self.vector, member, classes="memberpane")
+                yield TextMemberPane(self.vector, member)
             if self.vector.vectortype == "LightVector":
-                yield LightMemberPane(self.vector, member, classes="memberpane")
+                yield LightMemberPane(self.vector, member)
             if self.vector.vectortype == "NumberVector":
-                yield NumberMemberPane(self.vector, member, classes="memberpane")
+                yield NumberMemberPane(self.vector, member)
             if self.vector.vectortype == "BLOBVector":
-                yield BLOBMemberPane(self.vector, member, classes="memberpane")
+                yield BLOBMemberPane(self.vector, member)
 
         with Container(classes="submitbutton"):
             yield Button("Submit", id=self.vector_id+"_submit")

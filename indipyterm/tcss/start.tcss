@@ -95,8 +95,3 @@
     padding: 1;
     min-height: 10;
     }
-
-.memberpane {
-    background: $panel;
-    margin-left: 1;
-    }

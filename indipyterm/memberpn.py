@@ -16,14 +16,16 @@ class SwitchMemberPane(Widget):
     DEFAULT_CSS = """
         SwitchMemberPane {
             layout: vertical;
+            background: $panel;
+            margin-left: 1;
             height: auto;
         }
         """
 
-    def __init__(self, vector, member, classes):
+    def __init__(self, vector, member):
         self.member = member
         self.vector = vector
-        super().__init__(classes=classes, id=get_id(vector.devicename, vector.name, member.name))
+        super().__init__(id=get_id(vector.devicename, vector.name, member.name))
 
 
     def compose(self):
@@ -38,14 +40,16 @@ class TextMemberPane(Widget):
     DEFAULT_CSS = """
         TextMemberPane {
             layout: vertical;
+            background: $panel;
+            margin-left: 1;
             height: auto;
         }
         """
 
-    def __init__(self, vector, member, classes):
+    def __init__(self, vector, member):
         self.member = member
         self.vector = vector
-        super().__init__(classes=classes, id=get_id(vector.devicename, vector.name, member.name))
+        super().__init__(id=get_id(vector.devicename, vector.name, member.name))
 
 
     def compose(self):
@@ -59,14 +63,16 @@ class LightMemberPane(Widget):
     DEFAULT_CSS = """
         LightMemberPane {
             layout: vertical;
+            background: $panel;
+            margin-left: 1;
             height: auto;
         }
         """
 
-    def __init__(self, vector, member, classes):
+    def __init__(self, vector, member):
         self.member = member
         self.vector = vector
-        super().__init__(classes=classes, id=get_id(vector.devicename, vector.name, member.name))
+        super().__init__(id=get_id(vector.devicename, vector.name, member.name))
 
 
     def compose(self):
@@ -80,14 +86,16 @@ class NumberMemberPane(Widget):
     DEFAULT_CSS = """
         NumberMemberPane {
             layout: vertical;
+            background: $panel;
+            margin-left: 1;
             height: auto;
         }
         """
 
-    def __init__(self, vector, member, classes):
+    def __init__(self, vector, member):
         self.member = member
         self.vector = vector
-        super().__init__(classes=classes, id=get_id(vector.devicename, vector.name, member.name))
+        super().__init__(id=get_id(vector.devicename, vector.name, member.name))
 
 
     def compose(self):
@@ -100,14 +108,16 @@ class BLOBMemberPane(Widget):
     DEFAULT_CSS = """
         BLOBMemberPane {
             layout: vertical;
+            background: $panel;
+            margin-left: 1;
             height: auto;
         }
         """
 
-    def __init__(self, vector, member, classes):
+    def __init__(self, vector, member):
         self.member = member
         self.vector = vector
-        super().__init__(classes=classes, id=get_id(vector.devicename, vector.name, member.name))
+        super().__init__(id=get_id(vector.devicename, vector.name, member.name))
 
 
     def compose(self):
