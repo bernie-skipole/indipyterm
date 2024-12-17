@@ -11,6 +11,15 @@ from .connections import get_connection, get_devicename, get_devicemessages, get
 from textual.widget import Widget
 
 
+class SwitchValue(Static):
+
+    mvalue = reactive("")
+
+    def watch_mvalue(self, mvalue):
+        if mvalue:
+            self.update(mvalue)
+
+
 class SwitchMemberPane(Widget):
 
     DEFAULT_CSS = """
@@ -22,6 +31,8 @@ class SwitchMemberPane(Widget):
         }
         """
 
+    mvalue = reactive("")
+
     def __init__(self, vector, member):
         self.member = member
         self.vector = vector
@@ -31,7 +42,10 @@ class SwitchMemberPane(Widget):
     def compose(self):
         "Draw the member"
         yield Static(self.member.label)
-        yield Static(f"Value : {self.member.membervalue}")
+        yield SwitchValue(self.member.membervalue).data_bind(SwitchMemberPane.mvalue)
+
+
+
 
 
 
@@ -45,6 +59,8 @@ class TextMemberPane(Widget):
             height: auto;
         }
         """
+
+    mvalue = reactive("")
 
     def __init__(self, vector, member):
         self.member = member
@@ -69,6 +85,8 @@ class LightMemberPane(Widget):
         }
         """
 
+    mvalue = reactive("")
+
     def __init__(self, vector, member):
         self.member = member
         self.vector = vector
@@ -92,6 +110,8 @@ class NumberMemberPane(Widget):
         }
         """
 
+    mvalue = reactive("")
+
     def __init__(self, vector, member):
         self.member = member
         self.vector = vector
@@ -113,6 +133,8 @@ class BLOBMemberPane(Widget):
             height: auto;
         }
         """
+
+    mvalue = reactive("")
 
     def __init__(self, vector, member):
         self.member = member

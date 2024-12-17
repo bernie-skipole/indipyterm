@@ -384,6 +384,11 @@ class _Connection:
         # Display vector message
         vectorpane.vmessage = snapshot[devicename][item.vectorname].message
 
+        # For every member in the vector, display its value
+        vector = snapshot[item.devicename][item.vectorname]
+        for membername, membervalue in vector.items():
+            memberpane = self.devicesc.query_one(f"#{get_id(devicename, vector.name, membername)}")
+            memberpane.mvalue = membervalue
 
 
     def connect(self):
