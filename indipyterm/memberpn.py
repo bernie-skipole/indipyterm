@@ -71,6 +71,12 @@ class SwitchMemberPane(Widget):
             margin-bottom: 1;
             height: auto;
         }
+
+        SwitchMemberPane > Container {
+            width: 1fr;
+            height: auto;
+            align: center middle;
+        }
         """
 
     mvalue = reactive("")
@@ -83,9 +89,11 @@ class SwitchMemberPane(Widget):
 
     def compose(self):
         "Draw the member"
-        yield MemberLabel(self.member.label)
-        yield SwitchValue(self.member.membervalue).data_bind(SwitchMemberPane.mvalue)
-        if self.vector.perm != "ro":
+        with Container():
+            yield MemberLabel(self.member.label)
+        with Container():
+            yield SwitchValue(self.member.membervalue).data_bind(SwitchMemberPane.mvalue)
+        with Container():
             if self.member.membervalue == "On":
                 yield Switch(value=True)
             else:
