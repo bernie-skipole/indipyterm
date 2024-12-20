@@ -14,6 +14,35 @@ from .memberpn import SwitchMemberPane, TextMemberPane, LightMemberPane, NumberM
 from textual.widget import Widget
 
 
+class GroupTabPane(TabPane):
+
+    def __init__(self, tabtitle, groupname):
+        self.groupname = groupname
+        super().__init__(tabtitle)
+
+    def compose(self):
+        "For every vector draw it"
+        snapshot = get_connection().snapshot
+        devicename = get_devicename()
+        vectors = list(vector for vector in snapshot[devicename].values() if vector.group == self.groupname and vector.enable)
+        with VerticalScroll():
+            for vector in vectors:
+                yield VectorPane(vector)
+
+
+class GroupPane(Container):
+
+    def compose(self):
+        grouplist = get_devicegroups()
+        with TabbedContent():
+            for groupname in grouplist:
+                yield GroupTabPane(groupname, groupname=groupname)
+
+
+
+#  how to add and remove groups?
+
+
 
 class VectorTime(Static):
 
@@ -170,50 +199,130 @@ class VectorPane(Widget):
         # create vector message
         yield VectorMessage(self.vector.message).data_bind(VectorPane.vmessage)
 
-        # show the vector members
-        members = self.vector.members()
-        for member in members.values():
-            if self.vector.vectortype == "SwitchVector":
-                yield SwitchMemberPane(self.vector, member)
-            if self.vector.vectortype == "TextVector":
-                yield TextMemberPane(self.vector, member)
-            if self.vector.vectortype == "LightVector":
-                yield LightMemberPane(self.vector, member)
-            if self.vector.vectortype == "NumberVector":
-                yield NumberMemberPane(self.vector, member)
-            if self.vector.vectortype == "BLOBVector":
-                yield BLOBMemberPane(self.vector, member)
+        if self.vector.vectortype == "SwitchVector":
+            yield SwitchVector(self.vector)
+        elif self.vector.vectortype == "TextVector":
+            yield TextVector(self.vector)
+        elif self.vector.vectortype == "LightVector":
+            yield LightVector(self.vector)
+        elif self.vector.vectortype == "NumberVector":
+            yield NumberVector(self.vector)
+        elif self.vector.vectortype == "BLOBVector":
+            yield BLOBVector(self.vector)
 
         if self.vector.perm != "ro":
             with Container(classes="submitbutton"):
                 yield Button("Submit", id=self.vector_id+"_submit")
 
 
+class SwitchVector(Widget):
 
-class GroupTabPane(TabPane):
+    DEFAULT_CSS = """
+        SwitchVector {
+            height: auto;
+            }
+        """
 
-    def __init__(self, tabtitle, groupname):
-        self.groupname = groupname
-        super().__init__(tabtitle)
-
-    def compose(self):
-        "For every vector draw it"
-        snapshot = get_connection().snapshot
-        devicename = get_devicename()
-        vectors = list(vector for vector in snapshot[devicename].values() if vector.group == self.groupname and vector.enable)
-        with VerticalScroll():
-            for vector in vectors:
-                yield VectorPane(vector)
-
-
-class GroupPane(Container):
+    def __init__(self, vector):
+        self.vector = vector
+        super().__init__()
 
     def compose(self):
-        grouplist = get_devicegroups()
-        with TabbedContent():
-            for groupname in grouplist:
-                yield GroupTabPane(groupname, groupname=groupname)
+        "Draw the switch vector"
+        members = self.vector.members()
+        for member in members.values():
+            yield SwitchMemberPane(self.vector, member)
+
+    def on_switch_changed(self, event):
+        """OneOfMany AtMostOne AnyOfMany"""
+        if self.vector == "AnyOfMany":
+            return
+        if not event.value:
+            # switch turned off
+            return
+        switches = self.query("SwitchMemberPane > Switch")
+        for s in switches:
+            if s is event.switch:
+                continue
+            if s.value:
+                s.value = False
+
+
+class TextVector(Widget):
+
+    DEFAULT_CSS = """
+        TextVector {
+            height: auto;
+            }
+        """
+
+    def __init__(self, vector):
+        self.vector = vector
+        super().__init__()
+
+    def compose(self):
+        "Draw the text vector"
+        members = self.vector.members()
+        for member in members.values():
+            yield TextMemberPane(self.vector, member)
+
+
+class LightVector(Widget):
+
+    DEFAULT_CSS = """
+        LightVector {
+            height: auto;
+            }
+        """
+
+    def __init__(self, vector):
+        self.vector = vector
+        super().__init__()
+
+    def compose(self):
+        "Draw the light vector"
+        members = self.vector.members()
+        for member in members.values():
+            yield LightMemberPane(self.vector, member)
+
+
+class NumberVector(Widget):
+
+    DEFAULT_CSS = """
+        NumberVector {
+            height: auto;
+            }
+        """
+
+    def __init__(self, vector):
+        self.vector = vector
+        super().__init__()
+
+    def compose(self):
+        "Draw the number vector"
+        members = self.vector.members()
+        for member in members.values():
+            yield NumberMemberPane(self.vector, member)
+
+
+class BLOBVector(Widget):
+
+    DEFAULT_CSS = """
+        BLOBVector {
+            height: auto;
+            }
+        """
+
+    def __init__(self, vector):
+        self.vector = vector
+        super().__init__()
+
+    def compose(self):
+        "Draw the BLOB vector"
+        members = self.vector.members()
+        for member in members.values():
+            yield BLOBMemberPane(self.vector, member)
 
 
 
-#  how to add and remove groups?
+
