@@ -15,7 +15,6 @@ class MemberLabel(Static):
 
     DEFAULT_CSS = """
         MemberLabel {
-            margin-right: 4;
             width: auto;
         }
         """
@@ -25,7 +24,6 @@ class SwitchValue(Static):
 
     DEFAULT_CSS = """
         SwitchValue {
-            margin-right: 4;
             width: auto;
             padding: 1;
         }
