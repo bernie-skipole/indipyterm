@@ -184,8 +184,9 @@ class VectorPane(Widget):
             if self.vector.vectortype == "BLOBVector":
                 yield BLOBMemberPane(self.vector, member)
 
-        with Container(classes="submitbutton"):
-            yield Button("Submit", id=self.vector_id+"_submit")
+        if self.vector.perm != "ro":
+            with Container(classes="submitbutton"):
+                yield Button("Submit", id=self.vector_id+"_submit")
 
 
 

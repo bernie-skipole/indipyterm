@@ -93,10 +93,27 @@ class SwitchMemberPane(Widget):
             yield SwitchValue(self.member.membervalue).data_bind(SwitchMemberPane.mvalue)
         with Container():
             if self.member.membervalue == "On":
-                yield Switch(value=True)
+                if self.vector.perm == "ro":
+                    yield Switch(value=True, disabled=True)
+                else:
+                    yield Switch(value=True)
             else:
-                yield Switch(value=False)
+                if self.vector.perm == "ro":
+                    yield Switch(value=False, disabled=True)
+                else:
+                    yield Switch(value=False)
 
+    def watch_mvalue(self, mvalue):
+        if self.vector.perm != "ro":
+            return
+        # Only bother changing switch states if ro
+        if not  mvalue:
+            return
+        switch = self.query_one("Switch")
+        if mvalue == "On":
+            switch.value = True
+        else:
+            switch.value = False
 
 
 class TextMemberPane(Widget):
