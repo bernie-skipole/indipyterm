@@ -7,7 +7,7 @@ from textual.reactive import reactive
 from textual.screen import Screen
 from textual.containers import Container, Horizontal, VerticalScroll, Center
 
-from .connections import get_connection, get_devicename, get_devicemessages, get_devicegroups, get_id, localtimestring
+from .connections import get_connection, get_devicename, get_devicemessages, get_devicegroups, get_id, localtimestring, sendvector
 
 from .memberpn import SwitchMemberPane, TextMemberPane, LightMemberPane, NumberMemberPane, BLOBMemberPane
 
@@ -165,14 +165,6 @@ class VectorPane(Widget):
             background: $panel;
             border: blue;
             }
-        VectorPane > .submitbutton {
-            align: right top;
-            height: auto;
-            }
-        VectorPane > .submitbutton > Button {
-            margin-right: 1;
-            width: auto;
-            }
         """
 
     vtime = reactive("")
@@ -182,8 +174,8 @@ class VectorPane(Widget):
 
     def __init__(self, vector):
         self.vector = vector
-        self.vector_id = get_id(vector.devicename, vector.name)
-        super().__init__(id=self.vector_id)
+        vector_id = get_id(vector.devicename, vector.name)
+        super().__init__(id=vector_id)
 
 
     def compose(self):
@@ -210,9 +202,6 @@ class VectorPane(Widget):
         elif self.vector.vectortype == "BLOBVector":
             yield BLOBVector(self.vector)
 
-        if self.vector.perm != "ro":
-            with Container(classes="submitbutton"):
-                yield Button("Submit", id=self.vector_id+"_submit")
 
 
 class SwitchVector(Widget):
@@ -221,6 +210,14 @@ class SwitchVector(Widget):
         SwitchVector {
             height: auto;
             }
+        SwitchVector > .submitbutton {
+            align: right top;
+            height: auto;
+            }
+        SwitchVector > .submitbutton > Button {
+            margin-right: 1;
+            width: auto;
+            }
         """
 
     def __init__(self, vector):
@@ -228,24 +225,46 @@ class SwitchVector(Widget):
         super().__init__()
 
     def compose(self):
-        "Draw the switch vector"
+        "Draw the switch vector members"
         members = self.vector.members()
         for member in members.values():
             yield SwitchMemberPane(self.vector, member)
 
+        if self.vector.perm != "ro":
+            with Container(classes="submitbutton"):
+                yield Button("Submit")
+
+
     def on_switch_changed(self, event):
-        """OneOfMany AtMostOne AnyOfMany"""
-        if self.vector == "AnyOfMany":
+        """Enforce the rule, OneOfMany AtMostOne AnyOfMany"""
+        if self.vector.rule == "AnyOfMany":
             return
         if not event.value:
             # switch turned off
             return
-        switches = self.query("SwitchMemberPane > Switch")
+        switches = self.query("Switch")
         for s in switches:
             if s is event.switch:
+                # s is the switch changed
                 continue
             if s.value:
+                # any switch other than the one changed must be off
                 s.value = False
+
+
+    def on_button_pressed(self, event):
+        "Get membername:value dictionary"
+        switchpanes = self.query("SwitchMemberPane")
+        memberdict = {}
+        for sp in switchpanes:
+            membername = sp.member.name
+            switch = sp.query_one("Switch")
+            if switch.value:
+                memberdict[membername] = "On"
+            else:
+                memberdict[membername] = "Off"
+        # send this to the server
+        sendvector(self.vector.name, memberdict)
 
 
 class TextVector(Widget):

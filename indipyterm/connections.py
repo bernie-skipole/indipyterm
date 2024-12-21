@@ -72,7 +72,6 @@ def get_devicegroups(devicename=None):
     return grouplist
 
 
-
 ##########################################################################
 #
 # Global variable _CONNECTION will be an instance of the _Connection class
@@ -89,6 +88,17 @@ def make_connection():
 
 def get_connection():
     return _CONNECTION
+
+
+def sendvector(vectorname, memberdict):
+    global _CONNECTION
+    global _DEVICENAME
+    if _CONNECTION is None:
+        return
+    if not _DEVICENAME:
+        return
+    if _CONNECTION.is_alive():
+        _CONNECTION.txque.put((_DEVICENAME, vectorname, memberdict))
 
 
 class _ItemID():
@@ -469,3 +479,6 @@ class _Connection:
         self.queclient = None
         self.clientthread = None
         self.snapshot = None
+
+
+
