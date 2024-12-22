@@ -10,6 +10,8 @@ from .connections import get_connection, get_devicename, get_devicemessages, get
 
 from textual.widget import Widget
 
+from textual.css.query import NoMatches
+
 
 class MemberLabel(Static):
 
@@ -109,7 +111,11 @@ class SwitchMemberPane(Widget):
         # Only bother changing switch states if ro
         if not  mvalue:
             return
-        switch = self.query_one("Switch")
+        try:
+            switch = self.query_one("Switch")
+        except NoMatches:
+            # presumably this vector has not been displayed yet
+            return
         if mvalue == "On":
             switch.value = True
         else:

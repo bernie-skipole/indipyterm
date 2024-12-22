@@ -13,6 +13,8 @@ from .memberpn import SwitchMemberPane, TextMemberPane, LightMemberPane, NumberM
 
 from textual.widget import Widget
 
+from textual.css.query import NoMatches
+
 
 class GroupTabPane(TabPane):
 
@@ -211,13 +213,19 @@ class SwitchVector(Widget):
             height: auto;
             }
         SwitchVector > .submitbutton {
-            align: right top;
+            layout: horizontal;
+            align: right middle;
             height: auto;
             }
         SwitchVector > .submitbutton > Button {
             margin-right: 1;
             width: auto;
             }
+        SwitchVector > .submitbutton > Static {
+            margin-right: 4;
+            width: auto;
+            }
+
         """
 
     def __init__(self, vector):
@@ -232,11 +240,18 @@ class SwitchVector(Widget):
 
         if self.vector.perm != "ro":
             with Container(classes="submitbutton"):
+                yield Static("", id=f"{get_id(self.vector.devicename, self.vector.name)}_submitmessage")
                 yield Button("Submit")
 
 
     def on_switch_changed(self, event):
         """Enforce the rule, OneOfMany AtMostOne AnyOfMany"""
+        try:
+            buttonstatus = self.query_one(f"#{get_id(self.vector.devicename, self.vector.name)}_submitmessage")
+        except NoMatches:
+            # presumably this vector has not been displayed yet
+            return
+        buttonstatus.update("")
         if self.vector.rule == "AnyOfMany":
             return
         if not event.value:
@@ -254,6 +269,7 @@ class SwitchVector(Widget):
 
     def on_button_pressed(self, event):
         "Get membername:value dictionary"
+        buttonstatus = self.query_one(f"#{get_id(self.vector.devicename, self.vector.name)}_submitmessage")
         switchpanes = self.query("SwitchMemberPane")
         memberdict = {}
         for sp in switchpanes:
@@ -263,7 +279,14 @@ class SwitchVector(Widget):
                 memberdict[membername] = "On"
             else:
                 memberdict[membername] = "Off"
+        # Check at least one pressed if rule is OneOfMany
+        if self.vector.rule == "OneOfMany":
+            oncount = list(memberdict.values()).count("On")
+            if oncount != 1:
+                buttonstatus.update("Invalid, OneOfMany rule requires one On switch")
+                return
         # send this to the server
+        buttonstatus.update("")
         sendvector(self.vector.name, memberdict)
 
 
@@ -341,7 +364,3 @@ class BLOBVector(Widget):
         members = self.vector.members()
         for member in members.values():
             yield BLOBMemberPane(self.vector, member)
-
-
-
-

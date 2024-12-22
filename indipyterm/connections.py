@@ -10,6 +10,8 @@ from textual.reactive import reactive
 from textual.screen import Screen
 from textual.containers import Container, VerticalScroll
 
+from textual.css.query import NoMatches
+
 from indipyclient.queclient import QueClient
 
 logger = logging.getLogger()
@@ -383,8 +385,23 @@ class _Connection:
 
         # display the vector timestamp and state
 
-        vectorpane = self.devicesc.query_one(f"#{get_id(devicename, item.vectorname)}")
+        try:
+            vectorpane = self.devicesc.query_one(f"#{get_id(devicename, item.vectorname)}")
+        except NoMatches:
+            # presumably this vector has not been displayed yet
+            return
         vectorpane.vtime = localtimestring(snapshot[devicename][item.vectorname].timestamp)
+
+        if item.eventtype == "TimeOut":
+            try:
+                buttonstatus = self.devicesc.query_one(f"#{get_id(devicename, item.vectorname)}_submitmessage")
+            except NoMatches:
+                # presumably this vector has not been displayed yet
+                return
+            buttonstatus.update("A Timeout Error has occurred")
+            vectorpane.vstate = "Alert"
+            return
+
         vectorpane.vstate = snapshot[devicename][item.vectorname].state
 
         if item.eventtype == "State":
@@ -479,6 +496,3 @@ class _Connection:
         self.queclient = None
         self.clientthread = None
         self.snapshot = None
-
-
-
