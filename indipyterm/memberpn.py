@@ -146,15 +146,68 @@ class TextMemberPane(Widget):
         yield Static(self.member.label)
 
 
+class LightValue(Static):
+
+    DEFAULT_CSS = """
+        LightValue {
+            width: auto;
+            padding: 1;
+        }
+        """
+
+    mvalue = reactive("")
+
+    def __init__(self, lightval):
+        super().__init__(lightval)
+        if lightval == "Ok":
+            self.styles.background = "darkgreen"
+            self.styles.color = "white"
+        elif lightval == "Alert":
+            self.styles.background = "red"
+            self.styles.color = "white"
+        elif lightval == "Busy":
+            self.styles.background = "yellow"
+            self.styles.color = "black"
+        elif lightval == "Idle":
+            self.styles.background = "black"
+            self.styles.color = "white"
+
+    def watch_mvalue(self, mvalue):
+        if mvalue:
+            if mvalue == "Ok":
+                self.styles.background = "darkgreen"
+                self.styles.color = "white"
+            elif mvalue == "Alert":
+                self.styles.background = "red"
+                self.styles.color = "white"
+            elif mvalue == "Busy":
+                self.styles.background = "yellow"
+                self.styles.color = "black"
+            elif mvalue == "Idle":
+                self.styles.background = "black"
+                self.styles.color = "white"
+            else:
+                mvalue = "?"
+                self.styles.background = "black"
+                self.styles.color = "white"
+            self.update(mvalue)
+
 
 class LightMemberPane(Widget):
 
     DEFAULT_CSS = """
         LightMemberPane {
-            layout: vertical;
+            layout: horizontal;
             background: $panel;
             margin-left: 1;
+            margin-bottom: 1;
             height: auto;
+        }
+
+        LightMemberPane > Container {
+            width: 1fr;
+            height: auto;
+            align: center middle;
         }
         """
 
@@ -168,7 +221,11 @@ class LightMemberPane(Widget):
 
     def compose(self):
         "Draw the member"
-        yield Static(self.member.label)
+        with Container():
+            yield MemberLabel(self.member.label)
+        with Container():
+            yield LightValue(self.member.membervalue).data_bind(LightMemberPane.mvalue)
+
 
 
 
