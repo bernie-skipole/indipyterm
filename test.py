@@ -183,9 +183,31 @@ class LightDriver(ipd.IPyDriver):
                 binvector['binvalue3'] = "Idle" if binstring[0] == "1" else "Busy"
                 await binvector.send_setVector()
 
+    async def snoopevent(self, event):
+        "Snoops on switch, then send light vector showing the switch settings"
+
+        # name of device being snooped
+        switchdevicename = self.driverdata['switchdevicename']
+
+        # name of this light device, and the vector displaying the snoop data
+        devicename = self.driverdata['devicename']
+        snoopvector = self[devicename]["snoopvector"]
+
+        match event:
+
+            case ipd.setSwitchVector(devicename=switchdevicename, vectorname='AOMvector'):
+                # On receiving a snooped switch instruction
+                # set the lights accordingle, and send this new light vector
+                for membername, value in event.items():
+                    if value == "On":
+                        snoopvector[membername] = "Ok"
+                    else:
+                        snoopvector[membername] = "Idle"
+                await snoopvector.send_setVector()
 
 
-def make_light_driver(devicename):
+
+def make_light_driver(devicename, switchdevicename):
     "Returns an instance of the driver"
 
     # create four LightMembers, binvalue0 to binvalue3
@@ -202,12 +224,34 @@ def make_light_driver(devicename):
                                  state="Ok",
                                  lightmembers=members )
 
-    # create a device with this vector
+
+    # So the above vector is doing binary counting, now create a snooping vector
+    # to refect the switches of device switchdevicename and vector 'AOMvector'
+
+    # create five LightMembers, with names equal to the names of 'AOMvector' members
+    snoopmembers= []
+    for m in range(5):
+        snoopmembers.append( ipd.LightMember( name = f"AOMmember{m}",
+                                              label = f"Snooped value of switch {m}" )  )
+
+
+    # create a vector containing these members
+    snoopvector = ipd.LightVector( name="snoopvector",
+                                   label="Snoop on switch",
+                                   group="Values",
+                                   state="Ok",
+                                   lightmembers=snoopmembers )
+
+
+    # create a device with these vectors
     bincounter = ipd.Device( devicename=devicename,
-                             properties=[binvector] )
+                             properties=[binvector, snoopvector] )
 
     # Create the Driver, containing this Device
-    driver = LightDriver( bincounter, devicename=devicename )
+    driver = LightDriver( bincounter, devicename=devicename, switchdevicename=switchdevicename )
+
+    # Set this driver snooping on the AOMvector of the switch device
+    driver.snoop(switchdevicename, 'AOMvector')
 
     # and return the driver
     return driver
@@ -217,7 +261,7 @@ def make_light_driver(devicename):
 if __name__ == "__main__":
 
     switchdriver = make_switch_driver("switches")
-    lightdriver = make_light_driver("lights")
+    lightdriver = make_light_driver("lights", "switches")
     server = ipd.IPyServer(switchdriver, lightdriver)
     print(f"Running {__file__}")
     asyncio.run(server.asyncrun())
