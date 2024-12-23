@@ -10,8 +10,6 @@ from textual.reactive import reactive
 from textual.screen import Screen
 from textual.containers import Container, VerticalScroll
 
-from textual.css.query import NoMatches
-
 from indipyclient.queclient import QueClient
 
 logger = logging.getLogger()
@@ -33,6 +31,26 @@ def get_devicename():
 def set_devicename(devicename):
     global _DEVICENAME
     _DEVICENAME = devicename
+
+
+#########################################################################
+#
+# Global variable _DEVICESTATUS will be a status flag
+# set to give the progress of the devicescreen
+#
+#########################################################################
+
+
+_DEVICESTATUS = 0 # Zero for no devicescreen loaded
+                  # 1 for loading in progress
+                  # 2 for loaded
+
+def get_devicestatus():
+    return _DEVICESTATUS
+
+def set_devicestatus(value):
+    global _DEVICESTATUS
+    _DEVICESTATUS = value
 
 
 def get_devicemessages(devicename=None):
@@ -270,7 +288,12 @@ class _Connection:
 
     def check_rxque(self) -> None:
         """Method to handle received data."""
-        global _ITEMID
+        global _ITEMID, _DEVICESTATUS
+
+        if _DEVICESTATUS == 1:
+            # The device screen is loading
+            # don't receive anything just yet
+            return
 
         try:
             item = self.rxque.get_nowait()
@@ -358,6 +381,9 @@ class _Connection:
                 for membername in membernamelist:
                     set_id(item.devicename, item.vectorname, membername)
 
+        if _DEVICESTATUS != 2:
+            # no further action if devicesc not loaded
+            return
 
         if (self.devicesc is None) or self.startsc.is_active:
             # no devicesc shown so return
@@ -384,20 +410,11 @@ class _Connection:
             return
 
         # display the vector timestamp and state
-
-        try:
-            vectorpane = self.devicesc.query_one(f"#{get_id(devicename, item.vectorname)}")
-        except NoMatches:
-            # presumably this vector has not been displayed yet
-            return
+        vectorpane = self.devicesc.query_one(f"#{get_id(devicename, item.vectorname)}")
         vectorpane.vtime = localtimestring(snapshot[devicename][item.vectorname].timestamp)
 
         if item.eventtype == "TimeOut":
-            try:
-                buttonstatus = self.devicesc.query_one(f"#{get_id(devicename, item.vectorname)}_submitmessage")
-            except NoMatches:
-                # presumably this vector has not been displayed yet
-                return
+            buttonstatus = self.devicesc.query_one(f"#{get_id(devicename, item.vectorname)}_submitmessage")
             buttonstatus.update("A Timeout Error has occurred")
             vectorpane.vstate = "Alert"
             return

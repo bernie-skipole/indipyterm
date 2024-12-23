@@ -7,13 +7,12 @@ from textual.reactive import reactive
 from textual.screen import Screen
 from textual.containers import Container, Horizontal, VerticalScroll, Center
 
-from .connections import get_connection, get_devicename, get_devicemessages, get_devicegroups, get_id, localtimestring, sendvector
+from .connections import get_connection, get_devicename, get_devicemessages, get_devicegroups, set_id, get_id, localtimestring, sendvector, get_devicestatus, set_devicestatus
 
 from .memberpn import SwitchMemberPane, TextMemberPane, LightMemberPane, NumberMemberPane, BLOBMemberPane
 
 from textual.widget import Widget
 
-from textual.css.query import NoMatches
 
 
 class GroupTabPane(TabPane):
@@ -176,7 +175,7 @@ class VectorPane(Widget):
 
     def __init__(self, vector):
         self.vector = vector
-        vector_id = get_id(vector.devicename, vector.name)
+        vector_id = set_id(vector.devicename, vector.name)
         super().__init__(id=vector_id)
 
 
@@ -238,19 +237,21 @@ class SwitchVector(Widget):
         for member in members.values():
             yield SwitchMemberPane(self.vector, member)
 
-        if self.vector.perm != "ro":
-            with Container(classes="submitbutton"):
-                yield Static("", id=f"{get_id(self.vector.devicename, self.vector.name)}_submitmessage")
-                yield Button("Submit")
+        #if self.vector.perm != "ro":
+        with Container(classes="submitbutton"):
+            yield Static("", id=f"{get_id(self.vector.devicename, self.vector.name)}_submitmessage")
+            yield Button("Submit")
 
 
     def on_switch_changed(self, event):
         """Enforce the rule, OneOfMany AtMostOne AnyOfMany"""
-        try:
-            buttonstatus = self.query_one(f"#{get_id(self.vector.devicename, self.vector.name)}_submitmessage")
-        except NoMatches:
-            # presumably this vector has not been displayed yet
+        if self.vector.perm == "ro":
+            # ignore switch changes for read only vectors
             return
+        devicestatus = get_devicestatus()
+        if devicestatus != 2:
+            return
+        buttonstatus = self.query_one(f"#{get_id(self.vector.devicename, self.vector.name)}_submitmessage")
         buttonstatus.update("")
         if self.vector.rule == "AnyOfMany":
             return
@@ -269,6 +270,9 @@ class SwitchVector(Widget):
 
     def on_button_pressed(self, event):
         "Get membername:value dictionary"
+        devicestatus = get_devicestatus()
+        if devicestatus != 2:
+            return
         buttonstatus = self.query_one(f"#{get_id(self.vector.devicename, self.vector.name)}_submitmessage")
         switchpanes = self.query("SwitchMemberPane")
         memberdict = {}
@@ -284,6 +288,12 @@ class SwitchVector(Widget):
             oncount = list(memberdict.values()).count("On")
             if oncount != 1:
                 buttonstatus.update("Invalid, OneOfMany rule requires one On switch")
+                return
+        # Check no more than one pressed if rule is AtMostOne
+        if self.vector.rule == "AtMostOne":
+            oncount = list(memberdict.values()).count("On")
+            if oncount > 1:
+                buttonstatus.update("Invalid, AtMostOne rule allows only one On switch")
                 return
         # send this to the server
         buttonstatus.update("")

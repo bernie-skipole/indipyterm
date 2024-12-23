@@ -8,7 +8,7 @@ from textual.reactive import reactive
 from textual.screen import Screen
 from textual.containers import Container, HorizontalScroll, VerticalScroll, Center
 
-from .connections import get_connection, get_devicename, set_devicename, get_id, set_id
+from .connections import get_connection, get_devicename, set_devicename, get_id, set_id, set_devicestatus
 
 from .devicesc import DeviceSc
 
@@ -137,6 +137,13 @@ class StartSc(Screen):
     CSS_PATH = "tcss/start.tcss"
 
     ENABLE_COMMAND_PALETTE = False
+
+    def __init__(self):
+        super().__init__()
+
+    def on_screenresume(self, event):
+        "Sets status of devicescreen to 0 to indicate no devicescreen available"
+        set_devicestatus(0)
 
     def compose(self) -> ComposeResult:
         yield Static("INDI Terminal", id="title")

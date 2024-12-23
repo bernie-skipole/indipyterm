@@ -1,122 +1,148 @@
+# /// script
+# requires-python = ">=3.10"
+# dependencies = [
+#     "indipydriver",
+# ]
+# ///
 
-# Driver to control a bank of (simulated) LEDs so this
-# can be run on a PC without gpiozero
+
+"""Several SwitchVectors illustrating switch rules
+   OneOfMany AtMostOne AnyOfMany and ReadOnly"""
+
 
 import asyncio
+
 import indipydriver as ipd
 
 
-class LED:
-    "A class to simulate gpiozero.LED"
-
-    def __init__(self, pin):
-        self.pin = pin
-        self.is_lit = False
-        self._messagelist = ("one", "two", "three")
-        self._n = 0
-
-    def on(self):
-        self.is_lit = True
-
-    def off(self):
-        self.is_lit = False
-
-    def get_message(self):
-        self._n += 1
-        if self._n > 2:
-            self._n = 0
-        return self._messagelist[self._n]
-
-
-class _LEDDriver(ipd.IPyDriver):
-
-    """IPyDriver is subclassed here to create a driver
-       which controls all the given LEDs."""
+class Driver(ipd.IPyDriver):
+    """IPyDriver is subclassed here"""
 
     async def rxevent(self, event):
-        "On receiving data from the client, this is called"
+        """On receiving data."""
 
-        if isinstance(event, ipd.newSwitchVector) and event.devicename in self.driverdata:
+        devicename = self.driverdata['devicename']
 
-            # get the LED object associated with this devicename
-            ledobject = self.driverdata[event.devicename]
+        match event:
 
-            # event.vector is the vector being requested or altered
-            # event[membername] is the new value.
+            case ipd.newSwitchVector(devicename=devicename):
+                # get the received values and set them into the vector
+                for membername, membervalue in event.items():
+                    event.vector[membername] = membervalue
+                # transmit the vector back to client to confirm received
+                await event.vector.send_setVector()
 
-            if event.vectorname == "ledvector" and 'ledmember' in event:
-                # a new value has been received from the client
-                ledvalue = event["ledmember"]
-                # turn on or off the led
-                if ledvalue == "On":
-                    ledobject.on()
-                elif ledvalue == "Off":
-                    ledobject.off()
+
+    async def hardware(self):
+        """Send a new ro switch value every second"""
+
+        devicename = self.driverdata['devicename']
+
+        rovector = self[devicename]['ROvector']
+        while not self.stop:
+            # send a new switch value every second
+            for s in range(5):
+                await asyncio.sleep(1)
+                if rovector[f"ROMmember{s}"] == "On":
+                    rovector[f"ROMmember{s}"] = "Off"
                 else:
-                    # not valid
-                    return
-                # and set this new value into the vector
-                event.vector["ledmember"] = ledvalue
-                # send the updated vector back to the client
-                await event.vector.send_setVector(message = ledobject.get_message())
-                # and send a new text vector
-                textvector = self[event.devicename]["ledtextvector"]
-                textvector["ledtextmember"] = ledvalue
-                await textvector.send_setVector(message = ledobject.get_message())
+                    rovector[f"ROMmember{s}"] = "On"
+                await rovector.send_setVector()
 
 
-def make_driver(*pins):
-    "Creates the driver"
+def make_driver(devicename):
+    "Returns an instance of the driver"
 
-    # Note that “is_lit” is a property of the LED object
-    # and is True if the LED is on, this is used to
-    # set up the initial value of ledmember.
+    # create five members with rule OneOfMany
 
-    objdict = {}
-    devicelist = []
+    oom_members = []
+    for s in range(5):
+        # One member must be On
+        if s:
+            memval = "Off"
+        else:
+            memval = "On"
 
-    for pin in pins:
-        devicename = f"LED_{pin}"
-        ledobject = LED(pin)
-
-        # add this object to objdict, with key devicename
-        objdict[devicename] = ledobject
-
-        ledvalue = "On" if ledobject.is_lit else "Off"
-
-        # create switch member
-        ledmember = ipd.SwitchMember(name="ledmember",
-                                     label="LED Value",
-                                     membervalue=ledvalue)
-        # set this member into a vector
-        ledvector = ipd.SwitchVector(name="ledvector",
-                                     label="LED",
-                                     group=f"Group{pin}",
-                                     perm="wo",
-                                     rule='AtMostOne',
-                                     state="Ok",
-                                     switchmembers=[ledmember] )
+        member = ipd.SwitchMember( name=f"OOMmember{s}",
+                                   label=f"Switch {s}",
+                                   membervalue=memval )
+        oom_members.append(member)
 
 
-        # create text member
-        ledtextmember = ipd.TextMember(name="ledtextmember",
-                                     label="LED Value",
-                                     membervalue=ledvalue)
-        # set this member into a vector
-        ledtextvector = ipd.TextVector(name="ledtextvector",
-                                     label="LED",
-                                     group=f"Text Group{pin}",
-                                     perm="ro",
-                                     state="Ok",
-                                     textmembers=[ledtextmember] )
-        # create a Device with this vector and add it to the list
-        devicelist.append( ipd.Device( devicename, properties=[ledvector, ledtextvector]) )
+    oom_vector = ipd.SwitchVector( name = 'OOMvector',
+                                   label = "Switch",
+                                   group = 'OneOfMany',
+                                   perm = "wo",
+                                   state = "Ok",
+                                   rule = "OneOfMany",
+                                   switchmembers = oom_members)
+
+    # create five members with rule AtMostOne
+    amo_members = []
+    for s in range(5):
+        member = ipd.SwitchMember( name=f"AMOmember{s}",
+                                   label=f"Switch {s}",
+                                   membervalue="Off" )
+        amo_members.append(member)
 
 
-    # Create the Driver containing these devices, and as named argument
-    # add the devicename:LED object dictionary.
-    # This is a convenient way of linking device to controlling object
-    driver = _LEDDriver(*devicelist, **objdict )
+    amo_vector = ipd.SwitchVector( name = 'AMOvector',
+                                   label = "Switch",
+                                   group = 'AtMostOne',
+                                   perm = "wo",
+                                   state = "Ok",
+                                   rule = "AtMostOne",
+                                   switchmembers = amo_members)
+
+    # create five members with rule AnyOfMany
+    aom_members = []
+    for s in range(5):
+        member = ipd.SwitchMember( name=f"AOMmember{s}",
+                                   label=f"Switch {s}",
+                                   membervalue="Off" )
+        aom_members.append(member)
+
+
+    aom_vector = ipd.SwitchVector( name = 'AOMvector',
+                                   label = "Switch",
+                                   group = 'AnyOfMany',
+                                   perm = "wo",
+                                   state = "Ok",
+                                   rule = "AnyOfMany",
+                                   switchmembers = aom_members)
+
+    # create Read Only vector that the client cannot change
+    # this will be continuously altered by the driver hardware method
+    # to simulate an instrument having switches locally controlled
+
+    ro_members = []
+    for s in range(5):
+        # Set first member On
+        if s:
+            memval = "Off"
+        else:
+            memval = "On"
+
+        member = ipd.SwitchMember( name=f"ROMmember{s}",
+                                   label=f"Switch {s}",
+                                   membervalue=memval )
+        ro_members.append(member)
+
+    ro_vector = ipd.SwitchVector( name = 'ROvector',
+                                   label = "Switch",
+                                   group = 'ReadOnly',
+                                   perm = "ro",
+                                   state = "Ok",
+                                   rule = "AnyOfMany",
+                                   switchmembers = ro_members)
+
+
+    # create a device with these vectors
+    switchingdevice = ipd.Device( devicename=devicename,
+                         properties=[oom_vector, amo_vector, aom_vector, ro_vector] )
+
+    # Create the Driver, containing this Device
+    driver = Driver( switchingdevice, devicename=devicename)
 
     # and return the driver
     return driver
@@ -124,9 +150,7 @@ def make_driver(*pins):
 
 if __name__ == "__main__":
 
-    # create and serve the driver
-    # in this case a driver operating pins 16,17 and 18
-    driver = make_driver(16,17,18)
-    server = ipd.IPyServer(driver, host="localhost", port=7624, maxconnections=5)
+    driver = make_driver("switches")
+    server = ipd.IPyServer(driver)
     print(f"Running {__file__}")
     asyncio.run(server.asyncrun())
