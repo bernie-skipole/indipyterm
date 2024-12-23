@@ -237,10 +237,10 @@ class SwitchVector(Widget):
         for member in members.values():
             yield SwitchMemberPane(self.vector, member)
 
-        #if self.vector.perm != "ro":
-        with Container(classes="submitbutton"):
-            yield Static("", id=f"{get_id(self.vector.devicename, self.vector.name)}_submitmessage")
-            yield Button("Submit")
+        if self.vector.perm != "ro":
+            with Container(classes="submitbutton"):
+                yield Static("", id=f"{get_id(self.vector.devicename, self.vector.name)}_submitmessage")
+                yield Button("Submit")
 
 
     def on_switch_changed(self, event):
@@ -270,6 +270,9 @@ class SwitchVector(Widget):
 
     def on_button_pressed(self, event):
         "Get membername:value dictionary"
+        if self.vector.perm == "ro":
+            # No submission for read only vectors
+            return
         devicestatus = get_devicestatus()
         if devicestatus != 2:
             return

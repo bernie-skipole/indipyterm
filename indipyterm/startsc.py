@@ -34,8 +34,8 @@ class DevicePane(Container):
         if not CONNECTION.snapshot[devicename].enable:
             # This device is disabled
             return
-        set_devicename(devicename)
-        CONNECTION.devicesc = DeviceSc()
+
+        CONNECTION.devicesc = DeviceSc(devicename)
         self.app.push_screen(CONNECTION.devicesc)
 
 
@@ -144,6 +144,7 @@ class StartSc(Screen):
     def on_screenresume(self, event):
         "Sets status of devicescreen to 0 to indicate no devicescreen available"
         set_devicestatus(0)
+
 
     def compose(self) -> ComposeResult:
         yield Static("INDI Terminal", id="title")

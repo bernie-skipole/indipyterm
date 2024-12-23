@@ -25,6 +25,27 @@ logger.addHandler(logging.NullHandler())
 
 _DEVICENAME = ''
 
+#########################################################################
+#
+# Global variable _DEVICESTATUS will be a status flag
+# set to give the progress of the devicescreen
+#
+#########################################################################
+
+_DEVICESTATUS = 0 # Zero for no devicescreen loaded
+                  # 1 for loading in progress
+                  # 2 for loaded
+
+##########################################################################
+#
+# Global variable _CONNECTION will be an instance of the _Connection class
+#
+##########################################################################
+
+_CONNECTION = None
+
+
+
 def get_devicename():
     return _DEVICENAME
 
@@ -33,24 +54,17 @@ def set_devicename(devicename):
     _DEVICENAME = devicename
 
 
-#########################################################################
-#
-# Global variable _DEVICESTATUS will be a status flag
-# set to give the progress of the devicescreen
-#
-#########################################################################
-
-
-_DEVICESTATUS = 0 # Zero for no devicescreen loaded
-                  # 1 for loading in progress
-                  # 2 for loaded
 
 def get_devicestatus():
     return _DEVICESTATUS
 
 def set_devicestatus(value):
-    global _DEVICESTATUS
+    global _DEVICESTATUS, _CONNECTION
     _DEVICESTATUS = value
+    if _CONNECTION is None:
+        return
+    if not value:
+        _CONNECTION.devicesc = None
 
 
 def get_devicemessages(devicename=None):
@@ -92,13 +106,6 @@ def get_devicegroups(devicename=None):
     return grouplist
 
 
-##########################################################################
-#
-# Global variable _CONNECTION will be an instance of the _Connection class
-#
-##########################################################################
-
-_CONNECTION = None
 
 def make_connection():
     "Creates a singleton _Connection object"
