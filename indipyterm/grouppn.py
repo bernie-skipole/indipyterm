@@ -33,6 +33,15 @@ class GroupTabPane(TabPane):
 
 class GroupPane(Container):
 
+    DEFAULT_CSS = """
+
+        GroupPane {
+            width: 100%;
+            padding: 1;
+            min-height: 10;
+            }
+        """
+
     def compose(self):
         grouplist = get_devicegroups()
         with TabbedContent():

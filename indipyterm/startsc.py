@@ -15,6 +15,27 @@ from .devicesc import DeviceSc
 
 class DevicePane(Container):
 
+    DEFAULT_CSS = """
+
+            DevicePane {
+                width: 100%;
+                row-span: 2;
+                background: $panel;
+                border: dodgerblue;
+                }
+
+            DevicePane > Static {
+                background: $boost;
+                color: auto;
+                margin-bottom: 1;
+                padding: 1;
+                }
+
+             DevicePane > Button {
+                width: 100%;
+                }
+        """
+
     def compose(self):
         self.border_title = "Devices"
         yield Static("No Devices found", id="no-devices")
@@ -41,6 +62,14 @@ class DevicePane(Container):
 
 class BlobPane(HorizontalScroll):
 
+    DEFAULT_CSS = """
+
+        BlobPane {
+            background: $panel;
+            border: greenyellow;
+            }
+        """
+
     def compose(self):
         yield BlobInput(placeholder="Set a Folder to receive BLOBs", id="blob-input")
 
@@ -55,12 +84,43 @@ class BlobPane(HorizontalScroll):
 
 class MessagesPane(Container):
 
+    DEFAULT_CSS = """
+
+        MessagesPane {
+            width: 100%;
+            column-span: 2;
+            background: $panel;
+            border: mediumvioletred;
+            }
+
+        MessagesPane > Log {
+            width: 100%;
+            background: $panel;
+            scrollbar-background: $panel;
+            scrollbar-corner-color: $panel;
+            }
+        """
+
     def compose(self):
         self.border_title = "System Messages"
         yield Log(id="system-messages")
 
 
 class ConnectionPane(Container):
+
+    DEFAULT_CSS = """
+
+        ConnectionPane {
+            background: $panel;
+            border: mediumvioletred;
+            align: center middle;
+            }
+
+        ConnectionPane > Static {
+            margin: 1;
+            }
+        """
+
 
     def compose(self):
         self.border_title = "Set INDI Server"
@@ -134,7 +194,24 @@ class BlobInput(Input):
 class StartSc(Screen):
     """The top start screen."""
 
-    CSS_PATH = "tcss/start.tcss"
+    DEFAULT_CSS = """
+
+        StartSc > #title {
+           background: $primary;
+           color: $text;
+           padding-left: 2;
+           dock: top;
+           }
+
+        StartSc > #startsc-grid {
+            height: 100%;
+            min-height: 24;
+            layout: grid;
+            grid-size: 2 3;  /* two columns, three rows */
+            grid-columns: 1fr 2fr;
+            grid-rows: 2fr 1fr 1fr;
+            }
+        """
 
     ENABLE_COMMAND_PALETTE = False
 

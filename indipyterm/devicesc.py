@@ -14,6 +14,16 @@ from .grouppn import GroupPane
 
 class MessageLog(Log):
 
+    DEFAULT_CSS = """
+
+        MessageLog {
+            width: 100%;
+            height: 100%;
+            background: $panel;
+            scrollbar-background: $panel;
+            scrollbar-corner-color: $panel;
+            }
+        """
 
     def on_mount(self):
         self.clear()
@@ -26,6 +36,16 @@ class MessageLog(Log):
 
 class MessagesPane(Container):
 
+    DEFAULT_CSS = """
+
+        MessagesPane {
+            height: 6;
+            background: $panel;
+            border: mediumvioletred;
+           }
+        """
+
+
     def compose(self) -> ComposeResult:
         yield MessageLog(id="device-messages")
 
@@ -37,7 +57,16 @@ class MessagesPane(Container):
 class DeviceSc(Screen):
     """The class defining the device screen."""
 
-    CSS_PATH = "tcss/start.tcss"
+    DEFAULT_CSS = """
+
+        DeviceSc >#devicename {
+           height: 1;
+           background: $primary;
+           color: $text;
+           padding-left: 2;
+           dock: top;
+           }
+        """
 
     ENABLE_COMMAND_PALETTE = False
 
