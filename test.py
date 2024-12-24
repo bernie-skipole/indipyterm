@@ -6,11 +6,21 @@
 # ///
 
 
-"""Several SwitchVectors illustrating switch rules
-   OneOfMany AtMostOne AnyOfMany and ReadOnly"""
+"""A "switches" device consisting of several SwitchVectors
+   illustrating switch rules OneOfMany AtMostOne AnyOfMany and ReadOnly
+   The ReadOnly switches are continuously changing.
+
+   A "lights" device with one vector of binary counting lights and
+   one vector which snoops on the AnyOfMany vector of the switches device
+   and displays lights corresponding to the switches
+
+   The lights device also has two number vectors, a read only time
+   and a read-write value"""
 
 
 import asyncio
+
+from datetime import datetime, timezone
 
 import indipydriver as ipd
 
@@ -164,9 +174,13 @@ class LightDriver(ipd.IPyDriver):
         devicename = self.driverdata['devicename']
 
         binvector = self[devicename]['binvector']
+
+        timevector = self[devicename]['timevector']
+
         while not self.stop:
             # send a new lights count every second
             for n in range(16):
+                # Send it with colours red and green - to show off colours
                 await asyncio.sleep(1)
                 binstring = f'{n:04b}'       # strings "0000" to "1111" generated as n increments
                 binvector['binvalue0'] = "Alert" if binstring[3] == "1" else "Ok"
@@ -174,7 +188,11 @@ class LightDriver(ipd.IPyDriver):
                 binvector['binvalue2'] = "Alert" if binstring[1] == "1" else "Ok"
                 binvector['binvalue3'] = "Alert" if binstring[0] == "1" else "Ok"
                 await binvector.send_setVector()
+                # and update the time
+                timevector["timemember"] = datetime.now(tz=timezone.utc).strftime("%H:%M:%S")
+                await timevector.send_setVector()
             for n in range(16):
+                # and then with colours black and yellow - to show off colours
                 await asyncio.sleep(1)
                 binstring = f'{n:04b}'       # strings "0000" to "1111" generated as n increments
                 binvector['binvalue0'] = "Idle" if binstring[3] == "1" else "Busy"
@@ -182,6 +200,9 @@ class LightDriver(ipd.IPyDriver):
                 binvector['binvalue2'] = "Idle" if binstring[1] == "1" else "Busy"
                 binvector['binvalue3'] = "Idle" if binstring[0] == "1" else "Busy"
                 await binvector.send_setVector()
+                # and update the time
+                timevector["timemember"] = datetime.now(tz=timezone.utc).strftime("%H:%M:%S")
+                await timevector.send_setVector()
 
     async def snoopevent(self, event):
         "Snoops on switch, then send light vector showing the switch settings"
@@ -242,10 +263,26 @@ def make_light_driver(devicename, switchdevicename):
                                    state="Ok",
                                    lightmembers=snoopmembers )
 
+    # create a number vector, with one member showing the time
+    timestamp = datetime.now(tz=timezone.utc)
+    timemember = ipd.NumberMember( name = "timemember",
+                                   label = "The current time",
+                                   format = "%8.6m",
+                                   membervalue=timestamp.strftime("%H:%M:%S") )
+    timevector = ipd.NumberVector(name="timevector",
+                                  label="Time",
+                                  group="ro number",
+                                  perm="ro",
+                                  state="Ok",
+                                  numbermembers=[timemember])
+
+
+
+
 
     # create a device with these vectors
     bincounter = ipd.Device( devicename=devicename,
-                             properties=[binvector, snoopvector] )
+                             properties=[binvector, snoopvector, timevector] )
 
     # Create the Driver, containing this Device
     driver = LightDriver( bincounter, devicename=devicename, switchdevicename=switchdevicename )
