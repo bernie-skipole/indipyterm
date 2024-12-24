@@ -228,16 +228,39 @@ class LightMemberPane(Widget):
 
 
 
+class NumberValue(Static):
+
+    DEFAULT_CSS = """
+        NumberValue {
+            width: auto;
+            padding: 1;
+        }
+        """
+
+    mvalue = reactive("")
+
+
+    def watch_mvalue(self, mvalue):
+        if mvalue:
+            self.update(mvalue)
+
 
 class NumberMemberPane(Widget):
 
     DEFAULT_CSS = """
         NumberMemberPane {
-            layout: vertical;
+            layout: horizontal;
             background: $panel;
             margin-left: 1;
+            margin-bottom: 1;
             height: auto;
-        }
+            }
+
+        NumberMemberPane > Container {
+            width: 1fr;
+            height: auto;
+            align: center middle;
+            }
         """
 
     mvalue = reactive("")
@@ -250,7 +273,16 @@ class NumberMemberPane(Widget):
 
     def compose(self):
         "Draw the member"
-        yield Static(self.member.label)
+        with Container():
+            yield MemberLabel(self.member.label)
+        with Container():
+            yield NumberValue(self.member.membervalue).data_bind(NumberMemberPane.mvalue)
+        with Container():
+            yield Static("Input")
+
+
+
+
 
 
 class BLOBMemberPane(Widget):
