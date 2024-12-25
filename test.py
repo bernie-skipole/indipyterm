@@ -175,7 +175,6 @@ class LightDriver(ipd.IPyDriver):
 
         binvector = self[devicename]['binvector']
 
-        timevector = self[devicename]['timevector']
 
         while not self.stop:
             # send a new lights count every second
@@ -188,9 +187,6 @@ class LightDriver(ipd.IPyDriver):
                 binvector['binvalue2'] = "Alert" if binstring[1] == "1" else "Ok"
                 binvector['binvalue3'] = "Alert" if binstring[0] == "1" else "Ok"
                 await binvector.send_setVector()
-                # and update the time
-                timevector["timemember"] = datetime.now(tz=timezone.utc).strftime("%H:%M:%S")
-                await timevector.send_setVector()
             for n in range(16):
                 # and then with colours black and yellow - to show off colours
                 await asyncio.sleep(1)
@@ -200,9 +196,7 @@ class LightDriver(ipd.IPyDriver):
                 binvector['binvalue2'] = "Idle" if binstring[1] == "1" else "Busy"
                 binvector['binvalue3'] = "Idle" if binstring[0] == "1" else "Busy"
                 await binvector.send_setVector()
-                # and update the time
-                timevector["timemember"] = datetime.now(tz=timezone.utc).strftime("%H:%M:%S")
-                await timevector.send_setVector()
+
 
     async def snoopevent(self, event):
         "Snoops on switch, then send light vector showing the switch settings"
@@ -263,26 +257,9 @@ def make_light_driver(devicename, switchdevicename):
                                    state="Ok",
                                    lightmembers=snoopmembers )
 
-    # create a number vector, with one member showing the time
-    timestamp = datetime.now(tz=timezone.utc)
-    timemember = ipd.NumberMember( name = "timemember",
-                                   label = "The current time",
-                                   format = "%8.6m",
-                                   membervalue=timestamp.strftime("%H:%M:%S") )
-    timevector = ipd.NumberVector(name="timevector",
-                                  label="Time",
-                                  group="ro number",
-                                  perm="ro",
-                                  state="Ok",
-                                  numbermembers=[timemember])
-
-
-
-
-
     # create a device with these vectors
     bincounter = ipd.Device( devicename=devicename,
-                             properties=[binvector, snoopvector, timevector] )
+                             properties=[binvector, snoopvector] )
 
     # Create the Driver, containing this Device
     driver = LightDriver( bincounter, devicename=devicename, switchdevicename=switchdevicename )
@@ -294,11 +271,105 @@ def make_light_driver(devicename, switchdevicename):
     return driver
 
 
+class NumberDriver(ipd.IPyDriver):
+    """IPyDriver is subclassed here"""
+
+    async def rxevent(self, event):
+        """On receiving data."""
+
+        devicename = self.driverdata['devicename']
+
+        match event:
+
+            case ipd.newNumberVector(devicename=devicename):
+                # get the received values and set them into the vector
+                for membername, membervalue in event.items():
+                    event.vector[membername] = membervalue
+                # transmit the vector back to client to confirm received
+                await event.vector.send_setVector()
+
+
+    async def hardware(self):
+        """Send a new ro number value every second"""
+
+        devicename = self.driverdata['devicename']
+
+        timevector = self[devicename]['timevector']
+
+        while not self.stop:
+            # send a new switch value every second
+            await asyncio.sleep(1)
+            dtnow = datetime.now(tz=timezone.utc)
+            # and update the members
+            timevector["utctimemember"] = dtnow.strftime("%H:%M:%S")
+            timevector["localtimemember"] = dtnow.replace(tzinfo=None).strftime("%H:%M:%S")
+            await timevector.send_setVector()
+
+
+def make_number_driver(devicename):
+    "Returns an instance of the driver"
+
+    # create a ro number 'time' vector, with two members showing the time
+    timestamp = datetime.now(tz=timezone.utc)
+    utctimemember = ipd.NumberMember( name = "utctimemember",
+                                      label = "The current UTC time",
+                                      format = "%8.6m",
+                                      membervalue=timestamp.strftime("%H:%M:%S") )
+
+    timestamp = timestamp.replace(tzinfo=None)
+    localtimemember = ipd.NumberMember( name = "localtimemember",
+                                        label = "The server local time",
+                                        format = "%8.6m",
+                                        membervalue=timestamp.strftime("%H:%M:%S") )
+
+
+    timevector = ipd.NumberVector(name="timevector",
+                                  label="Time",
+                                  group="ro_number",
+                                  perm="ro",
+                                  state="Ok",
+                                  numbermembers=[utctimemember, localtimemember])
+
+    # create an input number vector with two members
+    number1 = ipd.NumberMember( name = "nmember1",
+                                label = "Number 1",
+                                format = "%7.2f",
+                                membervalue="0.00" )
+
+    number2 = ipd.NumberMember( name = "nmember2",
+                                label = "Number 2",
+                                format = "%7.2f",
+                                membervalue="0.00" )
+
+    numbervector = ipd.NumberVector(name="nvector",
+                                  label="Input Numbers",
+                                  group="rw_number",
+                                  perm="rw",
+                                  state="Ok",
+                                  numbermembers=[number1, number2])
+
+
+
+
+    # create a device with these vectors
+    numbers = ipd.Device( devicename=devicename,
+                          properties=[timevector, numbervector] )
+
+    # Create the Driver, containing this Device
+    driver = NumberDriver( numbers, devicename=devicename )
+
+    # and return the driver
+    return driver
+
+
+
 
 if __name__ == "__main__":
 
+    # Make drivers, with their devicenames
     switchdriver = make_switch_driver("switches")
     lightdriver = make_light_driver("lights", "switches")
-    server = ipd.IPyServer(switchdriver, lightdriver)
+    numberdriver = make_number_driver("numbers")
+    server = ipd.IPyServer(switchdriver, lightdriver, numberdriver)
     print(f"Running {__file__}")
     asyncio.run(server.asyncrun())

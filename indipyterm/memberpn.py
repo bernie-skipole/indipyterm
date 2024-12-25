@@ -8,6 +8,8 @@ from textual.containers import Container, Horizontal, VerticalScroll, Center
 
 from .connections import get_connection, get_devicename, get_devicemessages, get_devicegroups, get_id
 
+from indipyclient import getfloat
+
 from textual.widget import Widget
 
 from textual.css.query import NoMatches
@@ -18,6 +20,7 @@ class MemberLabel(Static):
     DEFAULT_CSS = """
         MemberLabel {
             width: auto;
+            padding: 1;
         }
         """
 
@@ -277,11 +280,56 @@ class NumberMemberPane(Widget):
             yield MemberLabel(self.member.label)
         with Container():
             yield NumberValue(self.member.membervalue).data_bind(NumberMemberPane.mvalue)
-        with Container():
-            yield Static("Input")
+        if self.vector.perm != "ro":
+            with Container():
+                yield NumberInputField(self.member, placeholder="Input new number", id="num-input")
 
 
+class NumberInputField(Input):
 
+    def __init__(self, member, placeholder, id):
+        self.member = member
+        super().__init__(placeholder=placeholder, id=id)
+
+    def on_blur(self, event):
+        # self.value is the new value input
+        try:
+            newfloat = getfloat(self.value)
+        except (ValueError, TypeError):
+            self.clear()
+            checkedvalue = self.member.getformattedvalue()
+            self.insert_text_at_cursor(checkedvalue)
+            return
+        # check step, and round newfloat to nearest step value
+        stepvalue = getfloat(self.member.step)
+        minvalue = getfloat(self.member.min)
+        if stepvalue:
+            stepvalue = Decimal(str(stepvalue))
+            difference = newfloat - minvalue
+            newfloat = minvalue + float(int(Decimal(str(difference)) / stepvalue) * stepvalue)
+        # check not less than minimum
+        if newfloat < minvalue:
+            # reset input to be the minimum, and accept this
+            self.clear()
+            checkedvalue = self.member.getformattedstring(minvalue)
+            self.insert_text_at_cursor(checkedvalue)
+            return
+        if self.member.max != self.member.min:
+            maxvalue = getfloat(self.member.max)
+            if newfloat > maxvalue:
+                # reset input to be the maximum, and accept this
+                self.clear()
+                checkedvalue = self.member.getformattedstring(maxvalue)
+                self.insert_text_at_cursor(checkedvalue)
+                return
+        # reset input to the correct format, and accept this
+        self.clear()
+        checkedvalue = self.member.getformattedstring(newfloat)
+        self.insert_text_at_cursor(checkedvalue)
+
+
+    def action_submit(self):
+        self.screen.focus_next('*')
 
 
 

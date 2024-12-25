@@ -363,10 +363,36 @@ class NumberVector(Widget):
         super().__init__()
 
     def compose(self):
-        "Draw the number vector"
+        "Draw the number vector members"
         members = self.vector.members()
         for member in members.values():
             yield NumberMemberPane(self.vector, member)
+
+        if self.vector.perm != "ro":
+            with Container(classes="submitbutton"):
+                yield Static("", id=f"{get_id(self.vector.devicename, self.vector.name)}_submitmessage")
+                yield Button("Submit")
+
+    def on_button_pressed(self, event):
+        "Get membername:value dictionary"
+        if self.vector.perm == "ro":
+            # No submission for read only vectors
+            return
+        devicestatus = get_devicestatus()
+        if devicestatus != 2:
+            return
+        buttonstatus = self.query_one(f"#{get_id(self.vector.devicename, self.vector.name)}_submitmessage")
+        numberpanes = self.query("NumberMemberPane")
+        memberdict = {}
+        for np in numberpanes:
+            membername = np.member.name
+            numberfield = np.query_one("NumberInputField")
+            if not numberfield.value:
+                continue
+            memberdict[membername] = numberfield.value
+        # send this to the server
+        buttonstatus.update("")
+        sendvector(self.vector.name, memberdict)
 
 
 class BLOBVector(Widget):
