@@ -356,6 +356,21 @@ class NumberVector(Widget):
         NumberVector {
             height: auto;
             }
+
+        NumberVector > .submitbutton {
+            layout: horizontal;
+            align: right middle;
+            height: auto;
+            }
+        NumberVector > .submitbutton > Button {
+            margin-right: 1;
+            width: auto;
+            }
+        NumberVector > .submitbutton > Static {
+            margin-right: 4;
+            width: auto;
+            }
+
         """
 
     def __init__(self, vector):

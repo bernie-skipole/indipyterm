@@ -14,6 +14,8 @@ from textual.widget import Widget
 
 from textual.css.query import NoMatches
 
+from decimal import Decimal
+
 
 class MemberLabel(Static):
 
@@ -259,10 +261,21 @@ class NumberMemberPane(Widget):
             height: auto;
             }
 
-        NumberMemberPane > Container {
+        NumberMemberPane > .onefr {
             width: 1fr;
             height: auto;
             align: center middle;
+            }
+
+        NumberMemberPane > .twofr {
+            layout: horizontal;
+            width: 2fr;
+            height: auto;
+            align: center middle;
+            }
+
+        NumberMemberPane > .twofr > NumberInputField {
+            width: 1fr;
             }
         """
 
@@ -276,13 +289,20 @@ class NumberMemberPane(Widget):
 
     def compose(self):
         "Draw the member"
-        with Container():
+        with Container(classes="onefr"):
             yield MemberLabel(self.member.label)
-        with Container():
+        with Container(classes="onefr"):
             yield NumberValue(self.member.membervalue).data_bind(NumberMemberPane.mvalue)
         if self.vector.perm != "ro":
-            with Container():
+            with Container(classes="twofr"):
                 yield NumberInputField(self.member, placeholder="Input new number", id="num-input")
+                yield Button("Clear")
+
+    def on_button_pressed(self, event):
+        "Clear number input field"
+        infld = self.query_one("NumberInputField")
+        infld.clear()
+        event.stop()
 
 
 class NumberInputField(Input):

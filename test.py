@@ -333,11 +333,17 @@ def make_number_driver(devicename):
     # create an input number vector with two members
     number1 = ipd.NumberMember( name = "nmember1",
                                 label = "Number 1",
+                                min = "-50",
+                                max = "50",
+                                step = "0.05",
                                 format = "%7.2f",
                                 membervalue="0.00" )
 
     number2 = ipd.NumberMember( name = "nmember2",
                                 label = "Number 2",
+                                min = "-50",
+                                max = "50",
+                                step = "0.05",
                                 format = "%7.2f",
                                 membervalue="0.00" )
 
