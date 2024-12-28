@@ -286,10 +286,7 @@ class NumberDriver(ipd.IPyDriver):
                 for membername, membervalue in event.items():
                     event.vector[membername] = membervalue
                 # transmit the vector back to client to confirm received
-                if event.vector.name == "nvector":
-                    await event.vector.send_setVector(message="Min -50, Max 50, step 0.05")
-                else:
-                    await event.vector.send_setVector()
+                await event.vector.send_setVector()
 
 
     async def hardware(self):
