@@ -14,7 +14,7 @@
    one vector which snoops on the AnyOfMany vector of the switches device
    and displays lights corresponding to the switches
 
-   The lights device also has two number vectors, a read only time
+   A "numbers" device also has two number vectors, a read only time
    and a read-write value"""
 
 
@@ -297,7 +297,7 @@ class NumberDriver(ipd.IPyDriver):
         timevector = self[devicename]['timevector']
 
         while not self.stop:
-            # send a new switch value every second
+            # send a new time number value every second
             await asyncio.sleep(1)
             dtnow = datetime.now(tz=timezone.utc)
             # and update the members
@@ -354,9 +354,6 @@ def make_number_driver(devicename):
                                   state="Ok",
                                   numbermembers=[number1, number2])
 
-
-
-
     # create a device with these vectors
     numbers = ipd.Device( devicename=devicename,
                           properties=[timevector, numbervector] )
@@ -368,6 +365,80 @@ def make_number_driver(devicename):
     return driver
 
 
+class TextDriver(ipd.IPyDriver):
+    """IPyDriver is subclassed here"""
+
+    async def rxevent(self, event):
+        """On receiving data."""
+
+        devicename = self.driverdata['devicename']
+
+        match event:
+
+            case ipd.newTextVector(devicename=devicename):
+                # get the received values and set them into the vector
+                for membername, membervalue in event.items():
+                    event.vector[membername] = membervalue
+                # transmit the vector back to client to confirm received
+                await event.vector.send_setVector()
+
+
+    async def hardware(self):
+        """Send a new ro text value every three seconds"""
+
+        devicename = self.driverdata['devicename']
+
+        rotextvector = self[devicename]['rotextvector']
+
+        values = ("One", "Two", "Three")
+
+        while not self.stop:
+            # send a new text value every three seconds
+            for tv in values:
+                await asyncio.sleep(3)
+
+                rotextvector["rotextmember"] = tv
+                await rotextvector.send_setVector()
+
+
+def make_text_driver(devicename):
+    "Returns an instance of the driver"
+
+    # create a ro text vector
+    rotextmember = ipd.TextMember( name = "rotextmember",
+                                   label = "RO Text" )
+
+    rotextvector = ipd.TextVector(name="rotextvector",
+                                  label="Counter Text",
+                                  group="ro_text",
+                                  perm="ro",
+                                  state="Ok",
+                                  textmembers=[rotextmember])
+
+    # create an input text vector with two members
+    text1 = ipd.TextMember( name = "tmember1",
+                            label = "Text 1")
+
+    text2 = ipd.TextMember( name = "tmember2",
+                            label = "Text 2)
+
+    textvector = ipd.TextVector(name="tvector",
+                                label="Input Text",
+                                group="rw_text",
+                                perm="rw",
+                                state="Ok",
+                                textmembers=[text1, text2])
+
+    # create a device with these vectors
+    textdevice = ipd.Device( devicename=devicename,
+                             properties=[rotextvector, textvector] )
+
+    # Create the Driver, containing this Device
+    driver = TextDriver( textdevice, devicename=devicename )
+
+    # and return the driver
+    return driver
+
 
 
 if __name__ == "__main__":
@@ -376,6 +447,7 @@ if __name__ == "__main__":
     switchdriver = make_switch_driver("switches")
     lightdriver = make_light_driver("lights", "switches")
     numberdriver = make_number_driver("numbers")
-    server = ipd.IPyServer(switchdriver, lightdriver, numberdriver)
+    textdriver = make_text_driver("textdevice")
+    server = ipd.IPyServer(switchdriver, lightdriver, numberdriver, textdriver)
     print(f"Running {__file__}")
     asyncio.run(server.asyncrun())

@@ -141,7 +141,8 @@ class TextValue(Static):
 
 
     def watch_mvalue(self, mvalue):
-        self.update(mvalue)
+        if mvalue:
+            self.update(mvalue)
 
 
 class TextMemberPane(Widget):
@@ -162,15 +163,23 @@ class TextMemberPane(Widget):
             }
 
         TextMemberPane > .twofr {
-            layout: horizontal;
+            layout: vertical;
             width: 2fr;
             height: auto;
             align: center middle;
             }
 
-        TextMemberPane > .twofr > TextInputField {
-            width: 1fr;
+        TextMemberPane > .twofr > .textinput {
+            layout: horizontal;
+            height: auto;
             }
+
+        TextMemberPane > .twofr > .textinput > Button {
+            width: auto;
+            height: auto;
+            }
+
+
         """
 
     mvalue = reactive("")
@@ -185,10 +194,14 @@ class TextMemberPane(Widget):
         "Draw the member"
         with Container(classes="onefr"):
             yield MemberLabel(self.member.label)
-        with Container(classes="onefr"):
+        if self.vector.perm == "ro":
+            with Container(classes="onefr"):
+                yield TextValue(self.member.membervalue).data_bind(TextMemberPane.mvalue)
+            return
+        # permission is wo or rw
+        with Container(classes="twofr"):
             yield TextValue(self.member.membervalue).data_bind(TextMemberPane.mvalue)
-        if self.vector.perm != "ro":
-            with Container(classes="twofr"):
+            with Container(classes="textinput"):
                 yield TextInputField(self.member, placeholder="Input new text")
                 yield Button("Clear")
 
@@ -201,16 +214,27 @@ class TextMemberPane(Widget):
 
 class TextInputField(Input):
 
+    DEFAULT_CSS = """
+        TextInputField {
+            width: 1fr;
+            }
+        """
+
     def __init__(self, member, placeholder):
         self.member = member
         super().__init__(placeholder=placeholder)
 
     def on_blur(self, event):
         # self.value is the new value input
-        # reset input to the correct format, and accept this
+        if not self.value:
+            return
+        if self.value.isprintable():
+            checkedvalue = self.value
+        else:
+            checkedvalue = "Invalid string"
         self.clear()
-        #checkedvalue = self.value - --- check for ascii....
         self.insert_text_at_cursor(checkedvalue)
+
 
     def action_submit(self):
         self.screen.focus_next('*')
@@ -339,10 +363,6 @@ class NumberMemberPane(Widget):
             height: auto;
             align: center middle;
             }
-
-        NumberMemberPane > .twofr > NumberInputField {
-            width: 1fr;
-            }
         """
 
     mvalue = reactive("")
@@ -373,12 +393,21 @@ class NumberMemberPane(Widget):
 
 class NumberInputField(Input):
 
+    DEFAULT_CSS = """
+
+        NumberInputField {
+            width: 1fr;
+            }
+        """
+
     def __init__(self, member, placeholder):
         self.member = member
         super().__init__(placeholder=placeholder)
 
     def on_blur(self, event):
         # self.value is the new value input
+        if not self.value:
+            return
         try:
             newfloat = getfloat(self.value)
         except (ValueError, TypeError):
