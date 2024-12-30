@@ -17,14 +17,6 @@ from textual.css.query import NoMatches
 from decimal import Decimal
 
 
-class MemberLabel(Static):
-
-    DEFAULT_CSS = """
-        MemberLabel {
-            width: auto;
-        }
-        """
-
 
 class SwitchLabel(Static):
 
@@ -165,6 +157,45 @@ class TextValue(Static):
         """
 
 
+class ShowText(Container):
+
+    DEFAULT_CSS = """
+        ShowText {
+            layout: vertical;
+            width: 2fr;
+            height: auto;
+            }
+
+        TextValue {
+            width: 1fr;
+            padding: 1;
+            }
+
+        .textinput {
+            layout: horizontal;
+            height: auto;
+            }
+
+        Button {
+            width: auto;
+            height: auto;
+            }
+
+        """
+
+
+    def __init__(self, member):
+        self.member = member
+        super().__init__()
+
+    def compose(self):
+        # permission is wo or rw, so show value with editing capbility
+        yield TextValue(self.member.membervalue)
+        with Container(classes="textinput"):
+            yield TextInputField(self.member)
+            yield Button("Clear")
+
+
 
 class TextMemberPane(Widget):
 
@@ -176,40 +207,6 @@ class TextMemberPane(Widget):
             margin-bottom: 1;
             height: auto;
             }
-
-        TextMemberPane > .onefr {
-            width: 1fr;
-            height: auto;
-            align: center top;
-            }
-
-        TextMemberPane > .twofr {
-            layout: vertical;
-            width: 2fr;
-            height: auto;
-            align: center middle;
-            }
-
-        TextMemberPane > .twofr > .textvalue {
-            width: auto;
-            padding: 1;
-            }
-
-        TextMemberPane > .twofr > .rotextvalue {
-            width: auto;
-            padding: 1;
-            }
-
-        TextMemberPane > .twofr > .textinput {
-            layout: horizontal;
-            height: auto;
-            }
-
-        TextMemberPane > .twofr > .textinput > Button {
-            width: auto;
-            height: auto;
-            }
-
         """
 
     mvalue = reactive("")
@@ -226,15 +223,14 @@ class TextMemberPane(Widget):
             yield ROTextLabel(self.member.label)
             yield TextValue(self.member.membervalue)
             return
-        else:
-            yield TextLabel(self.member.label)
-        # permission is wo or rw
-        with Container(classes="twofr"):
-            yield TextValue(self.member.membervalue)
-            with Container(classes="textinput"):
-                yield TextInputField(self.member)
-                yield Button("Clear")
+        yield TextLabel(self.member.label)
+        yield ShowText(self.member)
 
+
+    def clear_text_value(self):
+        showtextvalue = self.query_one(TextValue)
+        showtextvalue.update("")
+        self.mvalue = ""
 
     def watch_mvalue(self, mvalue):
         if mvalue:
@@ -268,9 +264,6 @@ class TextInputField(Input):
         else:
             checkedvalue = "Invalid string"
         self.clear()
-        if not checkedvalue:
-            self.insert_text_at_cursor("X")
-            return
         self.insert_text_at_cursor(checkedvalue)
 
 

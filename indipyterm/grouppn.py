@@ -366,8 +366,6 @@ class TextVector(Widget):
         for tp in textpanes:
             membername = tp.member.name
             textfield = tp.query_one("TextInputField")
-            #if textfield.value is None
-            #    continue
             memberdict[membername] = textfield.value
         # send this to the server
         buttonstatus.update("")

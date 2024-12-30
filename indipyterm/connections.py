@@ -438,9 +438,12 @@ class _Connection:
         # For every member in the vector, display its value
         vector = snapshot[item.devicename][item.vectorname]
         for membername, membervalue in vector.items():
+            memberpane = self.devicesc.query_one(f"#{get_id(devicename, vector.name, membername)}")
             if vector.vectortype == "NumberVector":
                 membervalue = vector.getformattedvalue(membername)
-            memberpane = self.devicesc.query_one(f"#{get_id(devicename, vector.name, membername)}")
+            if vector.vectortype == "TextVector":
+                if not membervalue:
+                    memberpane.clear_text_value()
             memberpane.mvalue = membervalue
 
 
