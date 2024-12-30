@@ -420,7 +420,7 @@ def make_text_driver(devicename):
                             label = "Text 1")
 
     text2 = ipd.TextMember( name = "tmember2",
-                            label = "Text 2)
+                            label = "Text 2")
 
     textvector = ipd.TextVector(name="tvector",
                                 label="Input Text",

@@ -22,7 +22,17 @@ class MemberLabel(Static):
     DEFAULT_CSS = """
         MemberLabel {
             width: auto;
-            padding: 1;
+        }
+        """
+
+
+class SwitchLabel(Static):
+
+    DEFAULT_CSS = """
+        SwitchLabel {
+            width: 1fr;
+            height: 3;
+            content-align: center middle;
         }
         """
 
@@ -33,7 +43,8 @@ class SwitchValue(Static):
         SwitchValue {
             width: auto;
             padding: 1;
-        }
+            height: auto;
+            }
         """
 
     mvalue = reactive("")
@@ -94,8 +105,7 @@ class SwitchMemberPane(Widget):
 
     def compose(self):
         "Draw the member"
-        with Container():
-            yield MemberLabel(self.member.label)
+        yield SwitchLabel(self.member.label)
         with Container():
             yield SwitchValue(self.member.membervalue).data_bind(SwitchMemberPane.mvalue)
         with Container():
@@ -127,22 +137,33 @@ class SwitchMemberPane(Widget):
             switch.value = False
 
 
+class TextLabel(Static):
+
+    DEFAULT_CSS = """
+        TextLabel {
+            width: 1fr;
+            height: 3;
+            content-align: center middle;
+        }
+        """
+
+class ROTextLabel(Static):
+
+    DEFAULT_CSS = """
+        ROTextLabel {
+            width: 1fr;
+            content-align: center middle;
+        }
+        """
 
 class TextValue(Static):
 
     DEFAULT_CSS = """
         TextValue {
-            width: auto;
-            padding: 1;
+            width: 1fr;
         }
         """
 
-    mvalue = reactive("")
-
-
-    def watch_mvalue(self, mvalue):
-        if mvalue:
-            self.update(mvalue)
 
 
 class TextMemberPane(Widget):
@@ -159,7 +180,7 @@ class TextMemberPane(Widget):
         TextMemberPane > .onefr {
             width: 1fr;
             height: auto;
-            align: center middle;
+            align: center top;
             }
 
         TextMemberPane > .twofr {
@@ -167,6 +188,16 @@ class TextMemberPane(Widget):
             width: 2fr;
             height: auto;
             align: center middle;
+            }
+
+        TextMemberPane > .twofr > .textvalue {
+            width: auto;
+            padding: 1;
+            }
+
+        TextMemberPane > .twofr > .rotextvalue {
+            width: auto;
+            padding: 1;
             }
 
         TextMemberPane > .twofr > .textinput {
@@ -178,7 +209,6 @@ class TextMemberPane(Widget):
             width: auto;
             height: auto;
             }
-
 
         """
 
@@ -192,18 +222,25 @@ class TextMemberPane(Widget):
 
     def compose(self):
         "Draw the member"
-        with Container(classes="onefr"):
-            yield MemberLabel(self.member.label)
         if self.vector.perm == "ro":
-            with Container(classes="onefr"):
-                yield TextValue(self.member.membervalue).data_bind(TextMemberPane.mvalue)
+            yield ROTextLabel(self.member.label)
+            yield TextValue(self.member.membervalue)
             return
+        else:
+            yield TextLabel(self.member.label)
         # permission is wo or rw
         with Container(classes="twofr"):
-            yield TextValue(self.member.membervalue).data_bind(TextMemberPane.mvalue)
+            yield TextValue(self.member.membervalue)
             with Container(classes="textinput"):
-                yield TextInputField(self.member, placeholder="Input new text")
+                yield TextInputField(self.member)
                 yield Button("Clear")
+
+
+    def watch_mvalue(self, mvalue):
+        if mvalue:
+            showtextvalue = self.query_one(TextValue)
+            showtextvalue.update(mvalue)
+
 
     def on_button_pressed(self, event):
         "Clear text input field"
@@ -220,19 +257,20 @@ class TextInputField(Input):
             }
         """
 
-    def __init__(self, member, placeholder):
+    def __init__(self, member):
         self.member = member
-        super().__init__(placeholder=placeholder)
+        super().__init__() #placeholder="Input new text")
 
     def on_blur(self, event):
         # self.value is the new value input
-        if not self.value:
-            return
         if self.value.isprintable():
             checkedvalue = self.value
         else:
             checkedvalue = "Invalid string"
         self.clear()
+        if not checkedvalue:
+            self.insert_text_at_cursor("X")
+            return
         self.insert_text_at_cursor(checkedvalue)
 
 
@@ -240,13 +278,23 @@ class TextInputField(Input):
         self.screen.focus_next('*')
 
 
+class LightLabel(Static):
+
+    DEFAULT_CSS = """
+        LightLabel {
+            width: 1fr;
+            height: 3;
+            content-align: center middle;
+        }
+        """
 
 class LightValue(Static):
 
     DEFAULT_CSS = """
         LightValue {
-            width: auto;
             padding: 1;
+            width: auto;
+            height: auto;
         }
         """
 
@@ -303,7 +351,7 @@ class LightMemberPane(Widget):
             width: 1fr;
             height: auto;
             align: center middle;
-        }
+            }
         """
 
     mvalue = reactive("")
@@ -316,24 +364,32 @@ class LightMemberPane(Widget):
 
     def compose(self):
         "Draw the member"
-        with Container():
-            yield MemberLabel(self.member.label)
+        yield LightLabel(self.member.label)
         with Container():
             yield LightValue(self.member.membervalue).data_bind(LightMemberPane.mvalue)
 
 
+class NumberLabel(Static):
+
+    DEFAULT_CSS = """
+        NumberLabel {
+            width: 1fr;
+            height: 3;
+            content-align: center middle;
+        }
+        """
 
 class NumberValue(Static):
 
     DEFAULT_CSS = """
         NumberValue {
-            width: auto;
-            padding: 1;
+            width: 1fr;
+            height: 3;
+            content-align: center middle;
         }
         """
 
     mvalue = reactive("")
-
 
     def watch_mvalue(self, mvalue):
         if mvalue:
@@ -351,13 +407,7 @@ class NumberMemberPane(Widget):
             height: auto;
             }
 
-        NumberMemberPane > .onefr {
-            width: 1fr;
-            height: auto;
-            align: center middle;
-            }
-
-        NumberMemberPane > .twofr {
+        NumberMemberPane > Container {
             layout: horizontal;
             width: 2fr;
             height: auto;
@@ -375,12 +425,10 @@ class NumberMemberPane(Widget):
 
     def compose(self):
         "Draw the member"
-        with Container(classes="onefr"):
-            yield MemberLabel(self.member.label)
-        with Container(classes="onefr"):
-            yield NumberValue(self.member.membervalue).data_bind(NumberMemberPane.mvalue)
+        yield NumberLabel(self.member.label)
+        yield NumberValue(self.member.membervalue).data_bind(NumberMemberPane.mvalue)
         if self.vector.perm != "ro":
-            with Container(classes="twofr"):
+            with Container():
                 yield NumberInputField(self.member, placeholder="Input new number")
                 yield Button("Clear")
 
