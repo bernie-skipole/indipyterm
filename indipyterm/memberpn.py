@@ -241,6 +241,7 @@ class TextMemberPane(Widget):
     def on_button_pressed(self, event):
         "Clear text input field"
         infld = self.query_one("TextInputField")
+        infld.placeholder="Input new text"
         infld.clear()
         event.stop()
 
@@ -255,7 +256,7 @@ class TextInputField(Input):
 
     def __init__(self, member):
         self.member = member
-        super().__init__() #placeholder="Input new text")
+        super().__init__(placeholder="Input new text")
 
     def on_blur(self, event):
         # self.value is the new value input
@@ -263,8 +264,10 @@ class TextInputField(Input):
             checkedvalue = self.value
         else:
             checkedvalue = "Invalid string"
+        self.placeholder=""
         self.clear()
         self.insert_text_at_cursor(checkedvalue)
+
 
 
     def action_submit(self):
