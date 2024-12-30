@@ -396,8 +396,8 @@ class TextDriver(ipd.IPyDriver):
             # send a new text value every three seconds
             for tv in values:
                 await asyncio.sleep(3)
-
-                rotextvector["rotextmember"] = tv
+                rotextvector["rotextmember1"] = tv
+                rotextvector["rotextmember2"] = tv
                 await rotextvector.send_setVector()
 
 
@@ -405,15 +405,18 @@ def make_text_driver(devicename):
     "Returns an instance of the driver"
 
     # create a ro text vector
-    rotextmember = ipd.TextMember( name = "rotextmember",
-                                   label = "RO Text" )
+    rotextmember1 = ipd.TextMember( name = "rotextmember1",
+                                   label = "RO Text 1" )
+
+    rotextmember2 = ipd.TextMember( name = "rotextmember2",
+                                   label = "RO Text 2" )
 
     rotextvector = ipd.TextVector(name="rotextvector",
                                   label="Counter Text",
                                   group="ro_text",
                                   perm="ro",
                                   state="Ok",
-                                  textmembers=[rotextmember])
+                                  textmembers=[rotextmember1, rotextmember2])
 
     # create an input text vector with two members
     text1 = ipd.TextMember( name = "tmember1",

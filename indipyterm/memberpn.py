@@ -264,11 +264,13 @@ class TextInputField(Input):
             checkedvalue = self.value
         else:
             checkedvalue = "Invalid string"
-        self.placeholder=""
         self.clear()
         self.insert_text_at_cursor(checkedvalue)
 
     def on_key(self, event):
+        if event.character is None:
+            return
+        # a printable key is pressed
         self.placeholder=""
 
     def action_submit(self):
