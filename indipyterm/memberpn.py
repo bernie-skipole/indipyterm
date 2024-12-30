@@ -268,7 +268,8 @@ class TextInputField(Input):
         self.clear()
         self.insert_text_at_cursor(checkedvalue)
 
-
+    def on_key(self, event):
+        self.placeholder=""
 
     def action_submit(self):
         self.screen.focus_next('*')
