@@ -495,15 +495,41 @@ class NumberInputField(Input):
 
 
 
+class BLOBLabel(Static):
+
+    DEFAULT_CSS = """
+        BLOBLabel {
+            width: 1fr;
+            content-align: center middle;
+        }
+        """
+
+class BLOBRxValue(Static):
+
+    DEFAULT_CSS = """
+        BLOBRxValue {
+            width: 1fr;
+        }
+        """
+
+    mvalue = reactive("")
+
+    def watch_mvalue(self, mvalue):
+        if mvalue:
+            self.update(mvalue)
+
+
+
 class BLOBMemberPane(Widget):
 
     DEFAULT_CSS = """
         BLOBMemberPane {
-            layout: vertical;
+            layout: horizontal;
             background: $panel;
             margin-left: 1;
+            margin-bottom: 1;
             height: auto;
-        }
+            }
         """
 
     mvalue = reactive("")
@@ -516,4 +542,13 @@ class BLOBMemberPane(Widget):
 
     def compose(self):
         "Draw the member"
-        yield Static(self.member.label)
+        yield BLOBLabel(self.member.label)
+        CONNECTION = get_connection()
+        if self.vector.perm == "wo":
+            yield BLOBRxValue("-- Write only -- nothing received --").data_bind(BLOBMemberPane.mvalue)
+        elif not CONNECTION.blobfolderpath:
+            yield BLOBRxValue("-- BLOB Folder not set --").data_bind(BLOBMemberPane.mvalue)
+        elif not self.member.filename:
+            yield BLOBRxValue("-- Nothing yet received --").data_bind(BLOBMemberPane.mvalue)
+        else:
+            yield BLOBRxValue(self.member.filename).data_bind(BLOBMemberPane.mvalue)

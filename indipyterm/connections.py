@@ -444,7 +444,10 @@ class _Connection:
             if vector.vectortype == "TextVector":
                 if not membervalue:
                     memberpane.clear_text_value()
-            memberpane.mvalue = membervalue
+            if vector.vectortype == "BLOBVector":
+                memberpane.mvalue = vector.member(membername).filename
+            else:
+                memberpane.mvalue = membervalue
 
 
     def connect(self):
