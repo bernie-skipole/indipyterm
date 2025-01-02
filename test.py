@@ -106,6 +106,36 @@ class BLOBDriver(ipd.IPyDriver):
     """IPyDriver is subclassed here to create a driver for the instrument"""
 
 
+    async def rxevent(self, event):
+        """On receiving data from the client, this is called
+           It writes received BLOB data to a file"""
+
+        # event.vector is the vector being requested or altered
+        # event[membername] is the new value
+
+        if isinstance( event, ipd.newBLOBVector ):
+            if event.vectorname == "getvector" and 'getmember' in event:
+                # a new BLOB has been received from the client
+                blobvalue = event["getmember"]
+                # sizeformat is (membersize, memberformat)
+                membersize, memberformat = event.sizeformat["getmember"]
+                # make filename from timestamp
+                if event.timestamp:
+                    filename = "blobfile_" + event.timestamp.strftime('%Y%m%d_%H_%M_%S')
+                else:
+                    filename = "blobfile"
+                if memberformat:
+                    filename = filename + memberformat
+                # write this to a file
+                with open(filename, "wb") as fp:
+                    # Write bytes to file
+                    fp.write(blobvalue)
+                # send vector back to the client but with no members, this just
+                # sets the state to ok to inform the client it has been received
+                await event.vector.send_setVectorMembers(state="Ok", message=f"Saved as {filename}")
+
+
+
     async def hardware(self):
         """This is a continuously running coroutine which is used
            to transmit the blob to connected clients."""
@@ -142,9 +172,24 @@ class BLOBDriver(ipd.IPyDriver):
 def make_blob_driver(devicename, minutes):
     "Returns an instance of the driver"
 
+    # getvector and getmember receive and save a BLOB
+
+    # create member
+    getmember = ipd.BLOBMember( name="getmember",
+                                label="BLOB file" )
+    # set this member into a vector
+    getvector = ipd.BLOBVector( name="getvector",
+                                label="BLOB",
+                                group="Measurement Files",
+                                perm="wo",         # Informs client it is writing a BLOB
+                                state="Ok",
+                                blobmembers=[getmember] )
+
+
+    # Create an instrument that generates BLOBs and sends them
+
     blobcontrol = MakeBlobs(devicename, minutes)
 
-    # create blobvector, there is no member value to set at this point
     blobmember = ipd.BLOBMember( name="blobmember",
                                  label="Measurement logs",
                                  blobformat = ".csv" )
@@ -157,7 +202,7 @@ def make_blob_driver(devicename, minutes):
 
     # create a device with this vector
     blobdevice = ipd.Device( devicename=devicename,
-                             properties=[blobvector] )
+                             properties=[blobvector, getvector] )
 
     # Create the Driver, containing this device and
     # other objects needed to run the instrument
