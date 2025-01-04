@@ -6,7 +6,7 @@ from textual.reactive import reactive
 from textual.screen import Screen
 from textual.containers import Container, Horizontal, VerticalScroll, Center
 
-from .connections import get_connection, get_devicename, get_devicemessages, get_devicegroups, get_id
+from .connections import get_connection, get_devicename, get_devicemessages, get_devicegroups, get_id, get_last_filename
 
 from indipyclient import getfloat
 
@@ -508,7 +508,7 @@ class BLOBRxValue(Static):
 
     DEFAULT_CSS = """
         BLOBRxValue {
-            width: 1fr;
+            width: 2fr;
         }
         """
 
@@ -516,7 +516,7 @@ class BLOBRxValue(Static):
 
     def watch_mvalue(self, mvalue):
         if mvalue:
-            self.update(mvalue)
+            self.update(f"RX data: {mvalue}")
 
 
 
@@ -528,6 +528,19 @@ class BLOBMemberPane(Widget):
             background: $panel;
             margin-left: 1;
             margin-bottom: 1;
+            height: auto;
+            }
+
+        BLOBMemberPane > Container {
+            layout: vertical;
+            background: $panel;
+            width: 2fr;
+            height: auto;
+            }
+
+        Button {
+            margin: 1;
+            width: auto;
             height: auto;
             }
         """
@@ -544,11 +557,21 @@ class BLOBMemberPane(Widget):
         "Draw the member"
         yield BLOBLabel(self.member.label)
         CONNECTION = get_connection()
-        if self.vector.perm == "wo":
-            yield BLOBRxValue("-- Write only -- nothing received --").data_bind(BLOBMemberPane.mvalue)
-        elif not CONNECTION.blobfolderpath:
-            yield BLOBRxValue("-- BLOB Folder not set --").data_bind(BLOBMemberPane.mvalue)
-        elif not self.member.filename:
-            yield BLOBRxValue("-- Nothing yet received --").data_bind(BLOBMemberPane.mvalue)
-        else:
-            yield BLOBRxValue(self.member.filename).data_bind(BLOBMemberPane.mvalue)
+        last_filename = get_last_filename(self.vector.name, self.member.name)
+        with Container():
+            if self.vector.perm == "wo":
+                yield BLOBRxValue("RX data: N/A -- Write only --").data_bind(BLOBMemberPane.mvalue)
+            elif not CONNECTION.blobfolderpath:
+                yield BLOBRxValue("RX data: -- BLOB Folder not set --").data_bind(BLOBMemberPane.mvalue)
+            elif not self.member.filename:
+                yield BLOBRxValue("RX data: -- Nothing yet received --").data_bind(BLOBMemberPane.mvalue)
+            else:
+                yield BLOBRxValue(f"RX data: {self.member.filename}").data_bind(BLOBMemberPane.mvalue)
+            if self.vector.perm == "ro":
+                yield Static("TX data: N/A -- Read only --")
+            elif last_filename:
+                yield Static(f"TX data: {last_filename}")
+                yield Button("Send File")
+            else:
+                yield Static("TX data: -- No file sent --")
+                yield Button("Send File")

@@ -128,6 +128,32 @@ def sendvector(vectorname, memberdict):
         _CONNECTION.txque.put((_DEVICENAME, vectorname, memberdict))
 
 
+# These two functions are used for storing a BLOB filename sent to the server
+
+def get_last_filename(vectorname, membername):
+    "Gets a filename previously stored in the client member user_string"
+    global _CONNECTION
+    global _DEVICENAME
+    if _CONNECTION is None:
+        return
+    if not _DEVICENAME:
+        return
+    if _CONNECTION.is_alive():
+        return _CONNECTION.queclient.get_user_string(_DEVICENAME, vectorname, membername)
+
+
+def set_last_filename(vectorname, membername, filename):
+    "Sets a filename into the client member user_string"
+    global _CONNECTION
+    global _DEVICENAME
+    if _CONNECTION is None:
+        return
+    if not _DEVICENAME:
+        return
+    if _CONNECTION.is_alive():
+        _CONNECTION.queclient.set_user_string(_DEVICENAME, vectorname, membername, user_string = filename)
+
+
 class _ItemID():
 
     def __init__(self):
