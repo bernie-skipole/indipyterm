@@ -16,6 +16,8 @@ from textual.css.query import NoMatches
 
 from decimal import Decimal
 
+from .filechooser import ChooseFileSc
+
 
 
 class SwitchLabel(Static):
@@ -575,3 +577,9 @@ class BLOBMemberPane(Widget):
             else:
                 yield Static("TX data: -- No file sent --")
                 yield Button("Send File")
+
+
+    def on_button_pressed(self, event):
+        "Open file chooser screen"
+        self.app.push_screen(ChooseFileSc())
+        event.stop()
