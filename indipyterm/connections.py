@@ -128,6 +128,21 @@ def sendvector(vectorname, memberdict):
         _CONNECTION.txque.put((_DEVICENAME, vectorname, memberdict))
 
 
+def sendBLOBfile(vectorname, membername, path):
+    """create memberdict of {membername:(value, blobsize, blobformat)}"""
+    global _CONNECTION
+    global _DEVICENAME
+    if _CONNECTION is None:
+        return
+    if not _DEVICENAME:
+        return
+    if not _CONNECTION.is_alive():
+        return
+    _CONNECTION.txque.put((_DEVICENAME, vectorname, {membername:(path, 0, "")}))
+    set_last_filename(vectorname, membername, path.name)
+
+
+
 # These two functions are used for storing a BLOB filename sent to the server
 
 def get_last_filename(vectorname, membername):

@@ -2,6 +2,9 @@
 
 import sys, argparse, asyncio, pathlib, logging
 
+sys.path.insert(0, "/home/bernard/git/indipyclient")
+
+
 
 from . import version
 from .indipyterm import IPyTerm

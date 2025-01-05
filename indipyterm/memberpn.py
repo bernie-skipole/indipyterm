@@ -6,7 +6,7 @@ from textual.reactive import reactive
 from textual.screen import Screen
 from textual.containers import Container, Horizontal, VerticalScroll, Center
 
-from .connections import get_connection, get_devicename, get_devicemessages, get_devicegroups, get_id, get_last_filename
+from .connections import get_connection, get_devicename, get_devicemessages, get_devicegroups, get_id, get_last_filename, sendBLOBfile
 
 from indipyclient import getfloat
 
@@ -581,5 +581,10 @@ class BLOBMemberPane(Widget):
 
     def on_button_pressed(self, event):
         "Open file chooser screen"
-        self.app.push_screen(ChooseFileSc())
+        def send_path(path):
+            if path is not None:
+                sendBLOBfile(self.vector.name, self.member.name, path)
+                path_text = self.query_one("BLOBMemberPane > Container > Static")
+                path_text.update(path.name)
+        self.app.push_screen(ChooseFileSc(), send_path)
         event.stop()
