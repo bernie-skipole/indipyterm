@@ -521,6 +521,16 @@ class BLOBRxValue(Static):
             self.update(f"RX data: {mvalue}")
 
 
+class BLOBTxValue(Static):
+
+    DEFAULT_CSS = """
+        BLOBTxValue {
+            width: 2fr;
+        }
+        """
+
+
+
 
 class BLOBMemberPane(Widget):
 
@@ -570,12 +580,12 @@ class BLOBMemberPane(Widget):
             else:
                 yield BLOBRxValue(f"RX data: {self.member.filename}").data_bind(BLOBMemberPane.mvalue)
             if self.vector.perm == "ro":
-                yield Static("TX data: N/A -- Read only --")
+                yield BLOBTxValue("TX data: N/A -- Read only --")
             elif last_filename:
-                yield Static(f"TX data: {last_filename}")
+                yield BLOBTxValue(f"TX data: {last_filename}")
                 yield Button("Send File")
             else:
-                yield Static("TX data: -- No file sent --")
+                yield BLOBTxValue("TX data: -- No file sent --")
                 yield Button("Send File")
 
 
@@ -584,7 +594,7 @@ class BLOBMemberPane(Widget):
         def send_path(path):
             if path is not None:
                 sendBLOBfile(self.vector.name, self.member.name, path)
-                path_text = self.query_one("BLOBMemberPane > Container > Static")
-                path_text.update(path.name)
+                path_text = self.query_one("BLOBTxValue")
+                path_text.update(f"TX data: {path.name}")
         self.app.push_screen(ChooseFileSc(), send_path)
         event.stop()
