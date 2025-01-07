@@ -8,7 +8,7 @@ from textual.reactive import reactive
 from textual.screen import Screen
 from textual.containers import Container, HorizontalScroll, VerticalScroll, Center
 
-from .connections import get_connection, get_devicename, set_devicename, get_id, set_id, set_devicestatus
+from .connections import get_connection, get_devicename, set_devicename, get_id, set_id, set_devicestatus, devicename_from_id
 
 from .devicesc import DeviceSc
 
@@ -42,8 +42,8 @@ class DevicePane(Container):
 
     @on(Button.Pressed, ".devices")
     def choose_device(self, event):
-        "Each device button has name devicename"
-        devicename = event.button.name
+        "Choose device fro the button pressed"
+        devicename = devicename_from_id(event.button.id)
         if not devicename:
             return
         CONNECTION = get_connection()

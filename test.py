@@ -6,7 +6,10 @@
 # ///
 
 
-"""A "switches" device consisting of several SwitchVectors
+"""
+   This test.py has a number of devices and drivers intended to test a connected client.
+
+   A "switches" device consisting of several SwitchVectors
    illustrating switch rules OneOfMany AtMostOne AnyOfMany and ReadOnly
    The ReadOnly switches are continuously changing.
 
@@ -14,8 +17,10 @@
    one vector which snoops on the AnyOfMany vector of the switches device
    and displays lights corresponding to the switches
 
-   A "numbers" device also has two number vectors, a read only time
-   and a read-write value"""
+   A "numbers" device has two number vectors, a read only time
+   and a read-write value
+
+   A "blobmaker" device has two vectors one receiving and one sending BLOBs"""
 
 
 import asyncio, io, collections, math

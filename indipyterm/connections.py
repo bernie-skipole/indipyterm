@@ -213,6 +213,13 @@ class _ItemID():
             raise KeyError("If a membername is specified, a vectorname must also be given")
         return self._itemdict.get((devicename, vectorname, membername))
 
+    def get_devicename(self, deviceid):
+        "Given an id, get the devicename, or return None if it does not exist"
+        idnumber = int(deviceid.strip("id"))
+        for key,value in self._itemdict.items():
+            if value == idnumber:
+                return key[0]
+
 
     def clear(self):
         self._itemdict.clear()
@@ -243,6 +250,9 @@ def set_id(devicename, vectorname=None, membername=None):
         idnumber = _ITEMID.set(devicename, vectorname, membername)
     return "id"+str(idnumber)
 
+def devicename_from_id(deviceid):
+    global _ITEMID
+    return _ITEMID.get_devicename(deviceid)
 
 
 def localtimestring(t):
@@ -413,7 +423,7 @@ class _Connection:
                 deviceid = set_id(item.devicename)
                 device_pane = self.startsc.query_one("#device-pane")
                 device_pane.remove_children("#no-devices")
-                device_pane.mount(Button(item.devicename, name=item.devicename, variant="primary", classes="devices", id=deviceid))
+                device_pane.mount(Button(item.devicename, variant="primary", classes="devices", id=deviceid))
                 # give the vector an id
                 set_id(item.devicename, item.vectorname)
                 # give every member an id
