@@ -403,7 +403,7 @@ class _Connection:
                 deviceid = get_id(item.devicename)
                 if deviceid:
                     device_pane = self.startsc.query_one("#device-pane")
-                    device_pane.remove_children(deviceid)
+                    device_pane.remove_children(f"#{deviceid}")
                 _ITEMID.unset(item.devicename)
                 vectornamelist = list(snapshot[item.devicename].keys())
                 for vectorname in vectornamelist:
