@@ -390,11 +390,13 @@ class _Connection:
 
 
         if item.eventtype == "Delete":
-            if item.vectorname:
-                # if this device is being displayed, remove the vector
-                if devicename and (devicename == item.devicename):
+            if item.vectorname and snapshot[item.devicename].enable:
+                # vector is to be deleted, but the device is still enabled, so there is at least one other
+                # vector existing, and the device does not have to be deleted, just the specified vector
+                if self.devicesc and devicename and (devicename == item.devicename):
+                    # This device is being displayed, remove the vector
                     vectorid = get_id(item.devicename, item.vectorname)
-                    if vectorid and self.devicesc:
+                    if vectorid:
                         vectorwidget = self.devicesc.query_one(f"#{vectorid}")
                         vectorwidget.remove()
                         # the delete event could include a device message
@@ -411,7 +413,7 @@ class _Connection:
                 for membername in membernamelist:
                     _ITEMID.unset(item.devicename, item.vectorname, membername)
             else:
-                # no vectorname, so delete entire device
+                # either no vectorname, or last vector is deleted, so delete entire device
                 # when a device is deleted, the associated event message, if given, is added
                 # to the client messages
                 messages = snapshot.messages
