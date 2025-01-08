@@ -389,7 +389,7 @@ class _Connection:
         devicename = get_devicename()
 
 
-        if item.eventtype == "Delete":  # remove id's
+        if item.eventtype == "Delete":
             if item.vectorname:
                 # delete the vector id
                 _ITEMID.unset(item.devicename, item.vectorname)
@@ -400,10 +400,19 @@ class _Connection:
                 ########## todo, if devicename == item.devicename:recompose devicesc screen
             else:
                 # no vectorname, so delete entire device
+                # when a device is deleted, the associated event message, if given, is added
+                # to the client messages
+                log = self.startsc.query_one("#system-messages")
+                log.clear()
+                messages = snapshot.messages
+                mlist = reversed([ localtimestring(t) + "  " + m for t,m in messages ])
+                log.write_lines(mlist)
+                # remove the device from the startsc device-pane
                 deviceid = get_id(item.devicename)
                 if deviceid:
                     device_pane = self.startsc.query_one("#device-pane")
                     device_pane.remove_children(f"#{deviceid}")
+                # clear the device, vectors and members from _ITEMID
                 _ITEMID.unset(item.devicename)
                 vectornamelist = list(snapshot[item.devicename].keys())
                 for vectorname in vectornamelist:
@@ -411,6 +420,8 @@ class _Connection:
                     membernamelist = list(snapshot[item.devicename][vectorname].keys())
                     for membername in membernamelist:
                         _ITEMID.unset(item.devicename, vectorname, membername)
+                # If the device is currently being displayed, remove its screen and
+                # drop to startsc
                 if devicename == item.devicename:
                     if not self.startsc.is_active:
                         self.app.push_screen('startsc')
