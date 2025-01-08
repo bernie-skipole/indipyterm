@@ -173,10 +173,30 @@ class _ItemID():
 
     def __init__(self):
         self._itemdict = {}
+        self._groupdict = {}
         # Every device, vector, widget will be given an id
         # starting with characters 'id' followed by a string number
         # created by incrementing this self._itemid
         self._itemid = 0
+
+
+    def set_group(self, devicename, groupname):
+        "Sets an id for a group"
+        if not devicename:
+            raise KeyError("A devicename must be given to set a group id")
+        if not groupname:
+            raise KeyError("A group name must be given to set a group id")
+        self._itemid += 1
+        self._groupdict[devicename, groupname] = self._itemid
+        return self._itemid
+
+    def get_group(self, devicename, groupname):
+        "Gets a group id, or None if one not set"
+        if not devicename:
+            raise KeyError("A devicename must be given to get a group id")
+        if not groupname:
+            raise KeyError("A group name must be given to get a group id")
+        return self._groupdict.get(devicename, groupname)
 
     def set(self, devicename, vectorname=None, membername=None):
         if not vectorname:
@@ -253,6 +273,25 @@ def set_id(devicename, vectorname=None, membername=None):
 def devicename_from_id(deviceid):
     global _ITEMID
     return _ITEMID.get_devicename(deviceid)
+
+def get_group_id(groupname):
+    global _DEVICENAME, _ITEMID
+    if _DEVICENAME is None:
+        return
+    idnumber = _ITEMID.get_group(_DEVICENAME, groupname)
+    if idnumber is None:
+        return
+    return "id"+str(idnumber)
+
+def set_group_id(groupname):
+    global _DEVICENAME, _ITEMID
+    if _DEVICENAME is None:
+        return
+    idnumber = _ITEMID.get_group(_DEVICENAME, groupname)
+    if idnumber is None:
+        idnumber = _ITEMID.set_group(_DEVICENAME, groupname)
+    return "id"+str(idnumber)
+
 
 
 def localtimestring(t):
@@ -406,6 +445,21 @@ class _Connection:
                             log.clear()
                             mlist = reversed([ localtimestring(t) + "  " + m for t,m in messages ])
                             log.write_lines(mlist)
+
+                        # vector removed, does its group need to be removed?
+                        device = snapshot[devicename]
+                        groupset = set(vector.group for vector in device.values() if vector.enable)
+                        # get the group of the deleted vector
+                        grp = device[item.vectorname].group
+                        if grp not in groupset:
+                            # the grp no longer has enabled contents, and must be removed
+                            pass
+                            # get tabbed content
+                            # call method remove_pane(pane_id)
+
+ #####################################################################
+
+
                 # delete the vector id
                 _ITEMID.unset(item.devicename, item.vectorname)
                 # give every member an empty id
