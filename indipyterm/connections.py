@@ -391,22 +391,35 @@ class _Connection:
 
         if item.eventtype == "Delete":
             if item.vectorname:
+                # if this device is being displayed, remove the vector
+                if devicename and (devicename == item.devicename):
+                    vectorid = get_id(item.devicename, item.vectorname)
+                    if vectorid and self.devicesc:
+                        vectorwidget = self.devicesc.query_one(f"#{vectorid}")
+                        vectorwidget.remove()
+                        # the delete event could include a device message
+                        messages = snapshot[devicename].messages
+                        if messages:
+                            log = self.devicesc.query_one("#device-messages")
+                            log.clear()
+                            mlist = reversed([ localtimestring(t) + "  " + m for t,m in messages ])
+                            log.write_lines(mlist)
                 # delete the vector id
                 _ITEMID.unset(item.devicename, item.vectorname)
                 # give every member an empty id
                 membernamelist = list(snapshot[item.devicename][item.vectorname].keys())
                 for membername in membernamelist:
-                    _ITEMID.unset(None, item.devicename, item.vectorname, membername)
-                ########## todo, if devicename == item.devicename:recompose devicesc screen
+                    _ITEMID.unset(item.devicename, item.vectorname, membername)
             else:
                 # no vectorname, so delete entire device
                 # when a device is deleted, the associated event message, if given, is added
                 # to the client messages
-                log = self.startsc.query_one("#system-messages")
-                log.clear()
                 messages = snapshot.messages
-                mlist = reversed([ localtimestring(t) + "  " + m for t,m in messages ])
-                log.write_lines(mlist)
+                if messages:
+                    log = self.startsc.query_one("#system-messages")
+                    log.clear()
+                    mlist = reversed([ localtimestring(t) + "  " + m for t,m in messages ])
+                    log.write_lines(mlist)
                 # remove the device from the startsc device-pane
                 deviceid = get_id(item.devicename)
                 if deviceid:

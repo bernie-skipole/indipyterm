@@ -173,7 +173,7 @@ class VectorPane(Widget):
             layout: vertical;
             height: auto;
             background: $panel;
-            border: blue;
+            border: mediumvioletred;
             }
         """
 
