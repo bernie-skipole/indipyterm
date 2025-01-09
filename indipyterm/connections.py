@@ -198,6 +198,13 @@ class _ItemID():
             raise KeyError("A group name must be given to get a group id")
         return self._groupdict.get(devicename, groupname)
 
+    def unset_group(self, devicename, groupname):
+        if not devicename:
+            raise KeyError("A devicename must be given to unset a group id")
+        if not groupname:
+            raise KeyError("A group name must be given to unset a group id")
+        self._groupdict[devicename, groupname] = None
+
     def set(self, devicename, vectorname=None, membername=None):
         if not vectorname:
             vectorname = None
@@ -240,9 +247,9 @@ class _ItemID():
             if value == idnumber:
                 return key[0]
 
-
     def clear(self):
         self._itemdict.clear()
+        self._groupdict.clear()
         self._itemid = 0
 
 
@@ -281,8 +288,18 @@ def get_group_id(groupname):
         return
     idnumber = _ITEMID.get_group(_DEVICENAME, groupname)
     if idnumber is None:
+        return
+    return "gid"+str(idnumber)
+
+
+def set_group_id(groupname):
+    global _DEVICENAME, _ITEMID
+    if _DEVICENAME is None:
+        return
+    idnumber = _ITEMID.get_group(_DEVICENAME, groupname)
+    if idnumber is None:
         idnumber = _ITEMID.set_group(_DEVICENAME, groupname)
-    return "id"+str(idnumber)
+    return "gid"+str(idnumber)
 
 
 
@@ -431,7 +448,8 @@ class _Connection:
                         vectorwidget = self.devicesc.query_one(f"#{vectorid}")
                         vectorwidget.remove()
                         # the delete event could include a device message
-                        messages = snapshot[devicename].messages
+                        device = snapshot[devicename]
+                        messages = device.messages
                         if messages:
                             log = self.devicesc.query_one("#device-messages")
                             log.clear()
@@ -439,19 +457,15 @@ class _Connection:
                             log.write_lines(mlist)
 
                         # vector removed, does its group need to be removed?
-                        device = snapshot[devicename]
                         groupset = set(vector.group for vector in device.values() if vector.enable)
                         # get the group of the deleted vector
                         grp = device[item.vectorname].group
                         if grp not in groupset:
                             # the grp no longer has enabled contents, and must be removed
-                            pass
-                            # get tabbed content
-                            # call method remove_pane(pane_id)
-
- #####################################################################
-
-
+                            grpid = get_group_id(grp)
+                            tabbedcontent = self.devicesc.query_one("#dev_groups")
+                            tabbedcontent.remove_pane(grpid)
+                            _ITEMID.unset_group(item.devicename, grp)
                 # delete the vector id
                 _ITEMID.unset(item.devicename, item.vectorname)
                 # give every member an empty id
