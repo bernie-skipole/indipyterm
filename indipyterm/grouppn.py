@@ -7,7 +7,7 @@ from textual.reactive import reactive
 from textual.screen import Screen
 from textual.containers import Container, Horizontal, VerticalScroll, Center
 
-from .connections import get_connection, get_devicename, get_devicemessages, get_devicegroups, set_id, get_id, localtimestring, sendvector, get_devicestatus, set_devicestatus
+from .connections import get_connection, get_devicename, get_devicemessages, get_devicegroups, set_id, get_id, localtimestring, sendvector, get_devicestatus, set_devicestatus, get_group_id
 
 from .memberpn import SwitchMemberPane, TextMemberPane, LightMemberPane, NumberMemberPane, BLOBMemberPane
 
@@ -19,7 +19,7 @@ class GroupTabPane(TabPane):
 
     def __init__(self, tabtitle, groupname):
         self.groupname = groupname
-        super().__init__(tabtitle)
+        super().__init__(tabtitle, id=get_group_id(groupname))
 
     def compose(self):
         "For every vector draw it"

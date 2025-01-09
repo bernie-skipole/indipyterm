@@ -274,16 +274,8 @@ def devicename_from_id(deviceid):
     global _ITEMID
     return _ITEMID.get_devicename(deviceid)
 
-def get_group_id(groupname):
-    global _DEVICENAME, _ITEMID
-    if _DEVICENAME is None:
-        return
-    idnumber = _ITEMID.get_group(_DEVICENAME, groupname)
-    if idnumber is None:
-        return
-    return "id"+str(idnumber)
 
-def set_group_id(groupname):
+def get_group_id(groupname):
     global _DEVICENAME, _ITEMID
     if _DEVICENAME is None:
         return
