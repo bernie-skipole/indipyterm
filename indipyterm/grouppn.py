@@ -30,6 +30,15 @@ class GroupTabPane(TabPane):
             for vector in vectors:
                 yield VectorPane(vector)
 
+    def add_vector(self, vector):
+        "Add a vector to this tab"
+        # get the VerticalScroll
+        vs = self.query_one('VerticalScroll')
+        vs.mount(VectorPane(vector))
+
+
+
+
 
 class GroupPane(Container):
 
