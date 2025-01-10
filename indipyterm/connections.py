@@ -196,7 +196,7 @@ class _ItemID():
             raise KeyError("A devicename must be given to get a group id")
         if not groupname:
             raise KeyError("A group name must be given to get a group id")
-        return self._groupdict.get(devicename, groupname)
+        return self._groupdict.get((devicename, groupname))
 
     def unset_group(self, devicename, groupname):
         if not devicename:
@@ -527,8 +527,14 @@ class _Connection:
                     # add the vector to the tab
                     vector = snapshot[item.devicename][item.vectorname]
                     grpid = get_group_id(vector.group)               # if grpid None, a new group has to be created
-                    tabpane = self.devicesc.query_one(f"#{grpid}")
-                    tabpane.add_vector(vector)
+                    if grpid:
+                        tabpane = self.devicesc.query_one(f"#{grpid}")
+                        tabpane.add_vector(vector)
+                    else:
+                        #set_group_id(vector.group)
+                        grouppane = self.devicesc.query_one("#dev-group-pane")
+                        grouppane.add_group(vector.group)
+
             return
 
         if _DEVICESTATUS != 2:

@@ -57,9 +57,10 @@ class GroupPane(Container):
             for groupname in grouplist:
                 yield GroupTabPane(groupname, groupname=groupname)
 
+    def add_group(self, groupname):
+        tc = self.query_one('#dev_groups')
+        tc.add_pane(GroupTabPane(groupname, groupname=groupname))
 
-
-#  how to add and remove groups?
 
 
 
