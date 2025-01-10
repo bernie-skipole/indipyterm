@@ -517,7 +517,7 @@ class _Connection:
                 for membername in membernamelist:
                     set_id(item.devicename, item.vectorname, membername)
             elif not get_id(item.devicename, item.vectorname):
-                # known device, but new vector, give the vector an id   ########### todo: add device/vector widget, if device being displayed
+                # known device, but new vector, give the vector an id
                 set_id(item.devicename, item.vectorname)
                 # give every member an id
                 membernamelist = list(snapshot[item.devicename][item.vectorname].keys())
@@ -526,7 +526,7 @@ class _Connection:
                 if item.devicename == devicename:
                     # add the vector to the tab
                     vector = snapshot[item.devicename][item.vectorname]
-                    grpid = get_group_id(vector.group)               #         if grpid None, a new group has to be created
+                    grpid = get_group_id(vector.group)               # if grpid None, a new group has to be created
                     tabpane = self.devicesc.query_one(f"#{grpid}")
                     tabpane.add_vector(vector)
             return
