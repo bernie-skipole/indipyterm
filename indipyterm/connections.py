@@ -25,17 +25,6 @@ logger.addHandler(logging.NullHandler())
 
 _DEVICENAME = ''
 
-#########################################################################
-#
-# Global variable _DEVICESTATUS will be a status flag
-# set to give the progress of the devicescreen
-#
-#########################################################################
-
-_DEVICESTATUS = 0 # Zero for no devicescreen loaded
-                  # 1 for loading in progress
-                  # 2 for loaded
-
 ##########################################################################
 #
 # Global variable _CONNECTION will be an instance of the _Connection class
@@ -54,17 +43,9 @@ def set_devicename(devicename):
     _DEVICENAME = devicename
 
 
-
-def get_devicestatus():
-    return _DEVICESTATUS
-
-def set_devicestatus(value):
-    global _DEVICESTATUS, _CONNECTION
-    _DEVICESTATUS = value
-    if _CONNECTION is None:
-        return
-    if not value:
-        _CONNECTION.devicesc = None
+def clear_devicesc():
+    global  _CONNECTION
+    _CONNECTION.devicesc = None
 
 
 def get_devicemessages(devicename=None):
@@ -394,12 +375,16 @@ class _Connection:
 
     def check_rxque(self) -> None:
         """Method to handle received data."""
-        global _ITEMID, _DEVICESTATUS
+        global _ITEMID
 
-        if _DEVICESTATUS == 1:
-            # The device screen is loading
-            # don't receive anything just yet
-            return
+        if self.devicesc is None:
+            # there is no devicesc, so ensure startsc is active before continuing
+            if not self.startsc.is_active:
+                return
+        else:
+            # a devicesc has been set, ensure it is active before continuing
+            if not self.devicesc.is_active:
+                return
 
         try:
             item = self.rxque.get_nowait()
@@ -537,9 +522,6 @@ class _Connection:
 
             return
 
-        if _DEVICESTATUS != 2:
-            # no further action if devicesc not loaded
-            return
 
         if (self.devicesc is None) or self.startsc.is_active:
             # no devicesc shown so return

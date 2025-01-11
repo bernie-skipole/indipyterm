@@ -7,7 +7,7 @@ from textual.reactive import reactive
 from textual.screen import Screen
 from textual.containers import Container, Horizontal, VerticalScroll, Center
 
-from .connections import get_connection, set_devicename, get_devicename, get_devicemessages, set_devicestatus
+from .connections import get_connection, set_devicename, get_devicename, get_devicemessages, clear_devicesc
 from .grouppn import GroupPane
 
 
@@ -73,8 +73,7 @@ class DeviceSc(Screen):
     BINDINGS = [("m", "main", "Main Screen")]
 
     def __init__(self, devicename):
-        "set devicestatus to 1 to indicate screen loading"
-        set_devicestatus(1)
+        "set devicename in connections module"
         set_devicename(devicename)
         super().__init__()
 
@@ -85,13 +84,10 @@ class DeviceSc(Screen):
         yield MessagesPane(id="dev-messages-pane")
         yield GroupPane(id="dev-group-pane")
 
-    def on_mount(self, event) -> None:
-        "Indicate this devicesscreen is loaded"
-        set_devicestatus(2)
 
     def action_main(self) -> None:
         """Event handler called when m pressed."""
-        set_devicestatus(0)
+        clear_devicesc()
         self.app.pop_screen()
 
 

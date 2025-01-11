@@ -7,7 +7,7 @@ from textual.reactive import reactive
 from textual.screen import Screen
 from textual.containers import Container, Horizontal, VerticalScroll, Center
 
-from .connections import get_connection, get_devicename, get_devicemessages, get_devicegroups, set_id, get_id, localtimestring, sendvector, get_devicestatus, set_devicestatus, set_group_id
+from .connections import get_connection, get_devicename, get_devicemessages, get_devicegroups, set_id, get_id, localtimestring, sendvector, set_group_id
 
 from .memberpn import SwitchMemberPane, TextMemberPane, LightMemberPane, NumberMemberPane, BLOBMemberPane
 
@@ -267,9 +267,6 @@ class SwitchVector(Widget):
         if self.vector.perm == "ro":
             # ignore switch changes for read only vectors
             return
-        devicestatus = get_devicestatus()
-        if devicestatus != 2:
-            return
         buttonstatus = self.query_one(f"#{get_id(self.vector.devicename, self.vector.name)}_submitmessage")
         buttonstatus.update("")
         if self.vector.rule == "AnyOfMany":
@@ -291,9 +288,6 @@ class SwitchVector(Widget):
         "Get membername:value dictionary"
         if self.vector.perm == "ro":
             # No submission for read only vectors
-            return
-        devicestatus = get_devicestatus()
-        if devicestatus != 2:
             return
         buttonstatus = self.query_one(f"#{get_id(self.vector.devicename, self.vector.name)}_submitmessage")
         switchpanes = self.query("SwitchMemberPane")
@@ -366,9 +360,6 @@ class TextVector(Widget):
         "Get membername:value dictionary"
         if self.vector.perm == "ro":
             # No submission for read only vectors
-            return
-        devicestatus = get_devicestatus()
-        if devicestatus != 2:
             return
         buttonstatus = self.query_one(f"#{get_id(self.vector.devicename, self.vector.name)}_submitmessage")
         textpanes = self.query("TextMemberPane")
@@ -445,9 +436,6 @@ class NumberVector(Widget):
         "Get membername:value dictionary"
         if self.vector.perm == "ro":
             # No submission for read only vectors
-            return
-        devicestatus = get_devicestatus()
-        if devicestatus != 2:
             return
         buttonstatus = self.query_one(f"#{get_id(self.vector.devicename, self.vector.name)}_submitmessage")
         numberpanes = self.query("NumberMemberPane")
