@@ -501,8 +501,8 @@ class _Connection:
                 membernamelist = list(snapshot[item.devicename][item.vectorname].keys())
                 for membername in membernamelist:
                     set_id(item.devicename, item.vectorname, membername)
-            elif not get_id(item.devicename, item.vectorname):
-                # known device, but new vector, give the vector an id
+            elif self.devicesc and devicename and (devicename == item.devicename) and (not get_id(item.devicename, item.vectorname)):
+                # known device, which is currently being displayed, but new vector, give the vector an id
                 set_id(item.devicename, item.vectorname)
                 # give every member an id
                 membernamelist = list(snapshot[item.devicename][item.vectorname].keys())
@@ -547,11 +547,11 @@ class _Connection:
         if not item.vectorname:
             return
 
-
+        vector = snapshot[item.devicename][item.vectorname]
 
         # display the vector timestamp and state
         vectorpane = self.devicesc.query_one(f"#{get_id(devicename, item.vectorname)}")
-        vectorpane.vtime = localtimestring(snapshot[devicename][item.vectorname].timestamp)
+        vectorpane.vtime = localtimestring(vector.timestamp)
 
         if item.eventtype == "TimeOut":
             buttonstatus = self.devicesc.query_one(f"#{get_id(devicename, item.vectorname)}_submitmessage")
@@ -559,17 +559,18 @@ class _Connection:
             vectorpane.vstate = "Alert"
             return
 
-        vectorpane.vstate = snapshot[devicename][item.vectorname].state
+        vectorpane.vstate = vector.state
 
         if item.eventtype == "State":
             # Only the state has changed, and that's dealt with
             return
 
         # Display vector message
-        vectorpane.vmessage = snapshot[devicename][item.vectorname].message
+        if vector.message:
+            vectorpane.vmessage = localtimestring(vector.message_timestamp) + "  " + vector.message
 
         # For every member in the vector, display its value
-        vector = snapshot[item.devicename][item.vectorname]
+
         for membername, membervalue in vector.items():
             memberpane = self.devicesc.query_one(f"#{get_id(devicename, vector.name, membername)}")
             if vector.vectortype == "NumberVector":

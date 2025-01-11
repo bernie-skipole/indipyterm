@@ -2,14 +2,14 @@
 from typing import Iterable
 
 from textual.app import App, ComposeResult, SystemCommand
-from textual.widgets import Footer, Static, Button, Log, Input, TabbedContent, TabPane, Rule
+from textual.widgets import Footer, Static, Button, Log, Input, TabbedContent, TabPane, Rule, Switch
 from textual.reactive import reactive
 from textual.screen import Screen
 from textual.containers import Container, Horizontal, VerticalScroll, Center
 
 from .connections import get_connection, get_devicename, get_devicemessages, get_devicegroups, set_id, get_id, localtimestring, sendvector, set_group_id
 
-from .memberpn import SwitchMemberPane, TextMemberPane, LightMemberPane, NumberMemberPane, BLOBMemberPane
+from .memberpn import SwitchMemberPane, TextMemberPane, LightMemberPane, NumberMemberPane, BLOBMemberPane, NumberInputField, TextInputField
 
 from textual.widget import Widget
 
@@ -33,7 +33,7 @@ class GroupTabPane(TabPane):
     def add_vector(self, vector):
         "Add a vector to this tab"
         # get the VerticalScroll
-        vs = self.query_one('VerticalScroll')
+        vs = self.query_one(VerticalScroll)
         vs.mount(VectorPane(vector))
 
 
@@ -209,7 +209,11 @@ class VectorPane(Widget):
         yield vts
 
         # create vector message
-        yield VectorMessage(self.vector.message).data_bind(VectorPane.vmessage)
+        if self.vector.message:
+            vectormessage = localtimestring(self.vector.message_timestamp) + "  " + self.vector.message
+        else:
+            vectormessage = ""
+        yield VectorMessage(vectormessage).data_bind(VectorPane.vmessage)
 
         if self.vector.vectortype == "SwitchVector":
             yield SwitchVector(self.vector)
@@ -258,7 +262,7 @@ class SwitchVector(Widget):
 
         if self.vector.perm != "ro":
             with Container(classes="submitbutton"):
-                yield Static("", id=f"{get_id(self.vector.devicename, self.vector.name)}_submitmessage")
+                yield Static("", id=f"{set_id(self.vector.devicename, self.vector.name)}_submitmessage")
                 yield Button("Submit")
 
 
@@ -274,7 +278,7 @@ class SwitchVector(Widget):
         if not event.value:
             # switch turned off
             return
-        switches = self.query("Switch")
+        switches = self.query(Switch)
         for s in switches:
             if s is event.switch:
                 # s is the switch changed
@@ -290,11 +294,11 @@ class SwitchVector(Widget):
             # No submission for read only vectors
             return
         buttonstatus = self.query_one(f"#{get_id(self.vector.devicename, self.vector.name)}_submitmessage")
-        switchpanes = self.query("SwitchMemberPane")
+        switchpanes = self.query(SwitchMemberPane)
         memberdict = {}
         for sp in switchpanes:
             membername = sp.member.name
-            switch = sp.query_one("Switch")
+            switch = sp.query_one(Switch)
             if switch.value:
                 memberdict[membername] = "On"
             else:
@@ -353,7 +357,7 @@ class TextVector(Widget):
 
         if self.vector.perm != "ro":
             with Container(classes="submitbutton"):
-                yield Static("", id=f"{get_id(self.vector.devicename, self.vector.name)}_submitmessage")
+                yield Static("", id=f"{set_id(self.vector.devicename, self.vector.name)}_submitmessage")
                 yield Button("Submit")
 
     def on_button_pressed(self, event):
@@ -362,11 +366,11 @@ class TextVector(Widget):
             # No submission for read only vectors
             return
         buttonstatus = self.query_one(f"#{get_id(self.vector.devicename, self.vector.name)}_submitmessage")
-        textpanes = self.query("TextMemberPane")
+        textpanes = self.query(TextMemberPane)
         memberdict = {}
         for tp in textpanes:
             membername = tp.member.name
-            textfield = tp.query_one("TextInputField")
+            textfield = tp.query_one(TextInputField)
             if textfield.placeholder:
                 continue
             memberdict[membername] = textfield.value
@@ -429,7 +433,7 @@ class NumberVector(Widget):
 
         if self.vector.perm != "ro":
             with Container(classes="submitbutton"):
-                yield Static("", id=f"{get_id(self.vector.devicename, self.vector.name)}_submitmessage")
+                yield Static("", id=f"{set_id(self.vector.devicename, self.vector.name)}_submitmessage")
                 yield Button("Submit")
 
     def on_button_pressed(self, event):
@@ -438,11 +442,11 @@ class NumberVector(Widget):
             # No submission for read only vectors
             return
         buttonstatus = self.query_one(f"#{get_id(self.vector.devicename, self.vector.name)}_submitmessage")
-        numberpanes = self.query("NumberMemberPane")
+        numberpanes = self.query(NumberMemberPane)
         memberdict = {}
         for np in numberpanes:
             membername = np.member.name
-            numberfield = np.query_one("NumberInputField")
+            numberfield = np.query_one(NumberInputField)
             if not numberfield.value:
                 continue
             memberdict[membername] = numberfield.value

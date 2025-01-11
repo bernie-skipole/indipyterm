@@ -6,7 +6,7 @@ from textual.reactive import reactive
 from textual.screen import Screen
 from textual.containers import Container, Horizontal, VerticalScroll, Center
 
-from .connections import get_connection, get_devicename, get_devicemessages, get_devicegroups, get_id, get_last_filename, sendBLOBfile
+from .connections import get_connection, get_devicename, get_devicemessages, get_devicegroups,set_id, get_last_filename, sendBLOBfile
 
 from indipyclient import getfloat
 
@@ -94,7 +94,7 @@ class SwitchMemberPane(Widget):
     def __init__(self, vector, member):
         self.member = member
         self.vector = vector
-        super().__init__(id=get_id(vector.devicename, vector.name, member.name))
+        super().__init__(id=set_id(vector.devicename, vector.name, member.name))
 
 
     def compose(self):
@@ -121,7 +121,7 @@ class SwitchMemberPane(Widget):
         if not  mvalue:
             return
         try:
-            switch = self.query_one("Switch")
+            switch = self.query_one(Switch)
         except NoMatches:
             # presumably this vector has not been displayed yet
             return
@@ -216,7 +216,7 @@ class TextMemberPane(Widget):
     def __init__(self, vector, member):
         self.member = member
         self.vector = vector
-        super().__init__(id=get_id(vector.devicename, vector.name, member.name))
+        super().__init__(id=set_id(vector.devicename, vector.name, member.name))
 
 
     def compose(self):
@@ -242,7 +242,7 @@ class TextMemberPane(Widget):
 
     def on_button_pressed(self, event):
         "Clear text input field"
-        infld = self.query_one("TextInputField")
+        infld = self.query_one(TextInputField)
         infld.placeholder="Input new text"
         infld.clear()
         event.stop()
@@ -360,7 +360,7 @@ class LightMemberPane(Widget):
     def __init__(self, vector, member):
         self.member = member
         self.vector = vector
-        super().__init__(id=get_id(vector.devicename, vector.name, member.name))
+        super().__init__(id=set_id(vector.devicename, vector.name, member.name))
 
 
     def compose(self):
@@ -421,7 +421,7 @@ class NumberMemberPane(Widget):
     def __init__(self, vector, member):
         self.member = member
         self.vector = vector
-        super().__init__(id=get_id(vector.devicename, vector.name, member.name))
+        super().__init__(id=set_id(vector.devicename, vector.name, member.name))
 
 
     def compose(self):
@@ -435,7 +435,7 @@ class NumberMemberPane(Widget):
 
     def on_button_pressed(self, event):
         "Clear number input field"
-        infld = self.query_one("NumberInputField")
+        infld = self.query_one(NumberInputField)
         infld.clear()
         event.stop()
 
@@ -562,7 +562,7 @@ class BLOBMemberPane(Widget):
     def __init__(self, vector, member):
         self.member = member
         self.vector = vector
-        super().__init__(id=get_id(vector.devicename, vector.name, member.name))
+        super().__init__(id=set_id(vector.devicename, vector.name, member.name))
 
 
     def compose(self):
@@ -594,7 +594,7 @@ class BLOBMemberPane(Widget):
         def send_path(path):
             if path is not None:
                 sendBLOBfile(self.vector.name, self.member.name, path)
-                path_text = self.query_one("BLOBTxValue")
+                path_text = self.query_one(BLOBTxValue)
                 path_text.update(f"TX data: {path.name}")
         self.app.push_screen(ChooseFileSc(), send_path)
         event.stop()
