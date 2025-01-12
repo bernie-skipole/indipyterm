@@ -88,11 +88,11 @@ def get_devicegroups(devicename=None):
 
 
 
-def make_connection():
+def make_connection(host='localhost', port=7624):
     "Creates a singleton _Connection object"
     global _CONNECTION
     if _CONNECTION is None:
-        _CONNECTION = _Connection(host='localhost', port=7624, blobfolder=None)
+        _CONNECTION = _Connection(host=host, port=port, blobfolder=None)
 
 def get_connection():
     return _CONNECTION
