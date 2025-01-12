@@ -1,14 +1,12 @@
 
-from typing import Iterable
 
 from textual import on
-from textual.app import App, ComposeResult, SystemCommand
+from textual.app import ComposeResult
 from textual.widgets import Footer, Static, Button, Log, Input
-from textual.reactive import reactive
 from textual.screen import Screen
 from textual.containers import Container, HorizontalScroll, VerticalScroll, Center
 
-from .connections import get_connection, get_devicename, set_devicename, get_id, set_id, devicename_from_id
+from .connections import get_connection, devicename_from_id
 
 from .devicesc import DeviceSc
 
@@ -42,7 +40,7 @@ class DevicePane(Container):
 
     @on(Button.Pressed, ".devices")
     def choose_device(self, event):
-        "Choose device fro the button pressed"
+        "Choose device from the button pressed"
         devicename = devicename_from_id(event.button.id)
         if not devicename:
             return

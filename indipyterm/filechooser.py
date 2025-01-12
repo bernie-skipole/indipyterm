@@ -1,13 +1,11 @@
 from pathlib import Path
 from typing import Iterable
 
-from textual.app import App, ComposeResult, SystemCommand
-from textual.widgets import Footer, Static, Button, Log, Input, TabbedContent, TabPane, DirectoryTree
-from textual.reactive import reactive
-from textual.screen import Screen, ModalScreen
-from textual.containers import Container, Horizontal, VerticalScroll, Center
+from textual.app import ComposeResult
+from textual.widgets import Button, DirectoryTree
+from textual.screen import ModalScreen
+from textual.containers import Container, Horizontal
 
-from .connections import get_devicename
 
 
 class FilteredDirectoryTree(DirectoryTree):

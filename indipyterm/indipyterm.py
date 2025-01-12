@@ -1,14 +1,6 @@
 
-import asyncio, queue, threading
 
-from typing import Iterable
-
-from textual import on
-from textual.app import App, ComposeResult, SystemCommand
-from textual.widgets import Footer, Static, Button
-from textual.reactive import reactive
-from textual.screen import Screen
-from textual.containers import Container, VerticalScroll
+from textual.app import App
 
 from .connections import get_connection
 

@@ -1,12 +1,10 @@
-from typing import Iterable
 
-from textual.app import App, ComposeResult, SystemCommand
-from textual.widgets import Footer, Static, Button, Log, Input, TabbedContent, TabPane, Switch
+
+from textual.widgets import Static, Button, Input, Switch
 from textual.reactive import reactive
-from textual.screen import Screen
-from textual.containers import Container, Horizontal, VerticalScroll, Center
+from textual.containers import Container
 
-from .connections import get_connection, get_devicename, get_devicemessages, get_devicegroups,set_id, get_last_filename, sendBLOBfile
+from .connections import get_connection, set_id, get_last_filename, sendBLOBfile
 
 from indipyclient import getfloat
 

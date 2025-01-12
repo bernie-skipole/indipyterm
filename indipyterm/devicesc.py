@@ -1,13 +1,10 @@
 
-from typing import Iterable
-
-from textual.app import App, ComposeResult, SystemCommand
-from textual.widgets import Footer, Static, Button, Log, Input, TabbedContent, TabPane
-from textual.reactive import reactive
+from textual.app import ComposeResult
+from textual.widgets import Footer, Static, Log, TabbedContent
 from textual.screen import Screen
-from textual.containers import Container, Horizontal, VerticalScroll, Center
+from textual.containers import Container
 
-from .connections import get_connection, set_devicename, get_devicename, get_devicemessages, clear_devicesc
+from .connections import set_devicename, get_devicename, get_devicemessages, clear_devicesc
 from .grouppn import GroupPane
 
 
