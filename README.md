@@ -8,7 +8,7 @@ This indipyterm package provides a terminal client, which connects to the port, 
 
 It can be installed from Pypi with:
 
-to do    pip install indipyterm
+pip install indipyterm
 
 indipydriver and indipyterm communicate with the INDI protocol.
 
@@ -50,7 +50,7 @@ The INDI protocol defines the format of the data sent, such as light, number, te
 
 The package can be installed from:
 
-to do https://pypi.org/project/indipyterm
+https://pypi.org/project/indipyterm
 
 If installed from Pypi using pip, then dependencies will automatically be pulled and installed, these are:
 
