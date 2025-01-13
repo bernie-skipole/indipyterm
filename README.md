@@ -75,7 +75,11 @@ https://github.com/bernie-skipole/indipydriver
 
 https://indipydriver.readthedocs.io
 
-The indipyclient package contains classes which may also be useful if you want to create your own client or client script, perhaps targeting a particular instrument:
+With example driver scripts at:
+
+https://github.com/bernie-skipole/inditest
+
+The indipyclient package contains classes which may be useful if you want to create your own client or client script:
 
 https://pypi.org/project/indipyclient
 
