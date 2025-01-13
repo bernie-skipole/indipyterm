@@ -36,6 +36,13 @@ The package help is:
       --host HOST  Hostname/IP of the INDI server (default localhost).
       --version    show program's version number and exit
 
+If you have a tool such as pipx or uv, then indipyterm can be installed into a virtual environment and run with a single command:
+
+pipx run indipyterm
+
+or
+
+uvx indipyterm
 
 A typical session would look like:
 
@@ -52,7 +59,7 @@ The package can be installed from:
 
 https://pypi.org/project/indipyterm
 
-If installed from Pypi using pip, then dependencies will automatically be pulled and installed, these are:
+If installed from Pypi, then dependencies will automatically be pulled and installed, these are:
 
 indipyclient - which generates and parses the INDI protocol.
 
@@ -67,3 +74,11 @@ https://pypi.org/project/indipydriver
 https://github.com/bernie-skipole/indipydriver
 
 https://indipydriver.readthedocs.io
+
+The indipyclient package contains classes which may also be useful if you want to create your own client or client script, perhaps targeting a particular instrument:
+
+https://pypi.org/project/indipyclient
+
+https://github.com/bernie-skipole/indipyclient
+
+https://indipyclient.readthedocs.io

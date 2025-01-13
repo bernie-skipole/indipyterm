@@ -504,17 +504,15 @@ class _Connection:
                 membernamelist = list(snapshot[item.devicename][item.vectorname].keys())
                 for membername in membernamelist:
                     set_id(item.devicename, item.vectorname, membername)
-                if item.devicename == devicename:
-                    # add the vector to the tab
-                    vector = snapshot[item.devicename][item.vectorname]
-                    grpid = get_group_id(vector.group)               # if grpid None, a new group has to be created
-                    if grpid:
-                        tabpane = self.devicesc.query_one(f"#{grpid}")
-                        tabpane.add_vector(vector)
-                    else:
-                        #set_group_id(vector.group)
-                        grouppane = self.devicesc.query_one("#dev-group-pane")
-                        grouppane.add_group(vector.group)
+                # add the vector to the tab
+                vector = snapshot[item.devicename][item.vectorname]
+                grpid = get_group_id(vector.group)               # if grpid None, a new group has to be created
+                if grpid:
+                    tabpane = self.devicesc.query_one(f"#{grpid}")
+                    tabpane.add_vector(vector)
+                else:
+                    grouppane = self.devicesc.query_one("#dev-group-pane")
+                    grouppane.add_group(vector.group)
 
             return
 
