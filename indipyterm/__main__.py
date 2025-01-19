@@ -1,10 +1,9 @@
 
 
-import sys, argparse
+import sys, argparse, pathlib
 
 from . import version
-from .indipyterm import IPyTerm
-from .connections import make_connection
+from .iterm import IPyTerm
 
 
 
@@ -15,14 +14,25 @@ def main():
                                      description="Terminal client to communicate to an INDI service.")
     parser.add_argument("--port", type=int, default=7624, help="Port of the INDI server (default 7624).")
     parser.add_argument("--host", default="localhost", help="Hostname/IP of the INDI server (default localhost).")
+    parser.add_argument("--blobfolder", help="Optional folder where BLOB's will be saved.")
     parser.add_argument("--version", action="version", version=version)
     args = parser.parse_args()
 
-    # Create the initial server connection
-    make_connection(host=args.host, port=args.port)
+    if args.blobfolder:
+        try:
+            blobfolder = pathlib.Path(args.blobfolder).expanduser().resolve()
+        except Exception:
+            print("Error: If given, the BLOB's folder should be an existing directory")
+            return 1
+        else:
+            if not blobfolder.is_dir():
+                print("Error: If given, the BLOB's folder should be an existing directory")
+                return 1
+    else:
+        blobfolder = None
 
     # run the IPyTerm app
-    app = IPyTerm()
+    app = IPyTerm(host=args.host, port=args.port, blobfolder=blobfolder)
     app.run()
 
     return 0

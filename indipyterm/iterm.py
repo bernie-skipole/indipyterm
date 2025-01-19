@@ -1,4 +1,5 @@
 
+import pathlib
 
 from textual.app import App
 from textual import on
@@ -117,6 +118,45 @@ class BlobPane(HorizontalScroll):
             self.border_subtitle = "Received BLOBs disabled"
 
 
+class BlobInput(Input):
+
+    def on_mount(self):
+        if self.app.blobfolder:
+            self.insert_text_at_cursor(str(self.app.blobfolder))
+
+    def on_blur(self, event):
+        iclient = self.app.indiclient
+        if not self.value:
+            self.app.blobfolder = None
+            if iclient:
+                iclient.BLOBfolder = None
+            self.clear()
+            self.insert_text_at_cursor('')
+            self.parent.border_subtitle = "Received BLOBs disabled"
+            return
+
+        blobfolder = pathlib.Path(self.value).expanduser().resolve()
+        if not blobfolder.is_dir():
+            self.app.blobfolder = None
+            if iclient:
+                iclient.BLOBfolder = None
+            self.clear()
+            self.insert_text_at_cursor('Invalid Folder')
+            self.parent.border_subtitle = "Received BLOBs disabled"
+            return
+
+        self.app.blobfolder = blobfolder
+        if iclient:
+            iclient.BLOBfolder = blobfolder
+        self.clear()
+        self.insert_text_at_cursor(str(blobfolder))
+        self.parent.border_subtitle = "Received BLOBs enabled"
+
+
+    def action_submit(self):
+        self.screen.focus_next('*')
+
+
 
 class MessagesPane(Container):
 
@@ -231,20 +271,6 @@ class ConInput(Input):
         self.screen.focus_next('*')
 
 
-class BlobInput(Input):
-
-#    def on_blur(self, event):
-#        CONNECTION = get_connection()
-#        blobfolder = CONNECTION.checkblobfolder(self.value)
-#        self.clear()
-#        self.insert_text_at_cursor(blobfolder)
-#        if CONNECTION.blobfolderpath:
-#            self.parent.border_subtitle = "Received BLOBs enabled"
-#        else:
-#            self.parent.border_subtitle = "Received BLOBs disabled"
-
-    def action_submit(self):
-        self.screen.focus_next('*')
 
 
 
@@ -298,12 +324,20 @@ class IPyTerm(App):
     def __init__(self, host="localhost", port=7624, blobfolder=None):
         self.indihost = host
         self.indiport = port
-        self.blobfolder = blobfolder
+        if blobfolder:
+            bf = pathlib.Path(blobfolder).expanduser().resolve()
+            if bf.is_dir():
+                self.blobfolder = bf
+            else:
+                self.blobfolder = None
+        else:
+            self.blobfolder = None
         self.itemid = ItemID()
         self.indiclient = IClient(indihost=host, indiport=port, app=self)
-        if blobfolder:
-            self.indiclient.BLOBfolder = blobfolder
+        if self.blobfolder:
+            self.indiclient.BLOBfolder = self.blobfolder
         super().__init__()
+
 
     def on_mount(self) -> None:
         """Start the worker which runs self.indiclient.asyncrun()
