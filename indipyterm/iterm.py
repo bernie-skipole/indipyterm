@@ -40,7 +40,7 @@ class DevicePane(Container):
         """
 
     class NewButton(Message):
-        """Color selected message."""
+        """Add a new button."""
 
         def __init__(self, devicename: str) -> None:
             self.devicename = devicename
@@ -48,6 +48,13 @@ class DevicePane(Container):
 
     class ClearDevices(Message):
         pass
+
+    class DelButton(Message):
+        """Delete a button."""
+
+        def __init__(self, deviceid: str) -> None:
+            self.deviceid = deviceid
+            super().__init__()
 
     def compose(self):
         self.border_title = "Devices"
@@ -71,6 +78,10 @@ class DevicePane(Container):
         if self.query(".devices"):
             self.remove_children(".devices")
             self.mount(Static("No Devices found", id="no-devices"))
+
+    def on_device_pane_del_button(self, message: DelButton) -> None:
+        deviceid = message.deviceid
+        self.remove_children(f"#{deviceid}")
 
 
 #    @on(Button.Pressed, ".devices")
@@ -220,52 +231,69 @@ class ConnectionPane(Container):
 
     def compose(self):
         self.border_title = "Set INDI Server"
-        yield Static("temporary")
-        #CONNECTION = get_connection()
-        #con_input = ConInput(placeholder="Host:Port", id="con-input")
-        #con_status = Static("Host:Port not set", id="con-status")
-        #con_button = Button("Connect", id="con-button")
-        #if CONNECTION.host and CONNECTION.port:
-        #    con_input.disabled = True
-        #    con_status.update(f"Current server : {CONNECTION.host}:{CONNECTION.port}")
-        #    con_button.label = "Disconnect"
-        #else:
-        #    con_input.disabled = False
-        #    con_status.update("Host:Port not set")
-        #    con_button.label = "Connect"
-        #yield con_input
-        #yield con_status
-        #with Center():
-        #    yield con_button
+        con_input = ConInput(placeholder="Host:Port", id="con-input")
+        con_status = Static("Host:Port not set", id="con-status")
+        con_button = Button("Connect", id="con-button")
+        if self.app.indihost and self.app.indiport:
+            con_input.disabled = True
+            con_status.update(f"Current server : {self.app.indihost}:{self.app.indiport}")
+            con_button.label = "Disconnect"
+        else:
+            con_input.disabled = False
+            con_status.update("Host:Port not set")
+            con_button.label = "Connect"
+        yield con_input
+        yield con_status
+        with Center():
+            yield con_button
 
 
-#    def on_button_pressed(self, event):
-#        CONNECTION = get_connection()
-#        con_input = self.query_one("#con-input")
-#        con_status = self.query_one("#con-status")
-#        con_button = self.query_one("#con-button")
+    def on_button_pressed(self, event):
+        con_input = self.query_one("#con-input")
+        con_status = self.query_one("#con-status")
+        con_button = self.query_one("#con-button")
 
-#        if CONNECTION.host and CONNECTION.port:
-#            # call for disconnection
+        if self.app.indihost and self.app.indiport:
+            # call for disconnection
 #            CONNECTION.disconnect()
-#            con_input.disabled = False
-#            con_status.update("Host:Port not set")
-#            con_button.label = "Connect"
-#        else:
-#            # call for connection
-#            CONNECTION.connect()
-#            con_input.disabled = True
-#            con_status.update(f"Current server : {CONNECTION.host}:{CONNECTION.port}")
-#            con_button.label = "Disconnect"
+            con_input.disabled = False
+            con_status.update("Host:Port not set")
+            con_button.label = "Connect"
+        else:
+            # call for connection
+            self.app.indiclient = IClient(indihost=self.app.indihost, indiport=self.app.indiport, app=self.app)
+            if self.app.blobfolder:
+                self.app.indiclient.BLOBfolder = self.app.blobfolder
+            con_input.disabled = True
+            con_status.update(f"Current server : {self.app.indihost}:{self.app.indiport}")
+            con_button.label = "Disconnect"
 
 
 class ConInput(Input):
 
-#    def on_blur(self, event):
-#        CONNECTION = get_connection()
-#        hostport = CONNECTION.checkhostport(self.value)
-#        self.clear()
-#        self.insert_text_at_cursor(hostport)
+    def on_blur(self, event):
+
+        hostport = self.value.strip()
+        if hostport:
+            hostportlist = hostport.split(":")
+            if len(hostportlist) == 2:
+                host = hostportlist[0].strip()
+                port = hostportlist[1].strip()
+                if not host:
+                    host = "localhost"
+                if not port.isdigit():
+                    port = "7624"
+                hostport = f"{host}:{port}"
+            else:
+                host = hostportlist[0].strip()
+                if host:
+                    hostport = host +":7624"
+                else:
+                    hostport = "localhost:7624"
+        else:
+            hostport = "localhost:7624"
+        self.clear()
+        self.insert_text_at_cursor(hostport)
 
     def action_submit(self):
         self.screen.focus_next('*')

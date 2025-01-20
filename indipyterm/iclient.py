@@ -180,3 +180,21 @@ def run_startsc(indiclient, app, startsc, event):
             messagelog = localtimestring(event.timestamp) + "  " + event.message
             messages_pane  = startsc.query_one("#sys-messages-pane")
             messages_pane.post_message(messages_pane.ShowLogs(messagelog))
+    elif (event.eventtype == "Delete") and (not indiclient[event.devicename].enable):
+        # This entire device should be deleted
+        deviceid = app.itemid.get_devicid(event.devicename)
+        if not deviceid:
+            # This device is not displayed, nothing to do
+            return
+        # instruct the startsc to remove the device button
+        device_pane = startsc.query_one("#device-pane")
+        device_pane.post_message(device_pane.DelButton(deviceid))
+        if event.message:
+            # post this message as a system message, as there is no device
+            # so there is nowhere else to show it
+            messagelog = localtimestring(event.timestamp) + "  " + event.message
+            messages_pane  = startsc.query_one("#sys-messages-pane")
+            messages_pane.post_message(messages_pane.ShowLogs(messagelog))
+
+    
+
