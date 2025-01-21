@@ -58,7 +58,10 @@ class DevicePane(Container):
 
     def compose(self):
         self.border_title = "Devices"
-        devices = self.app.indiclient.enabledlen()
+        if self.app.indiclient is None:
+            devices = 0
+        else:
+            devices = self.app.indiclient.enabledlen()
         # The number of enabled devices
         if not devices:
             yield Static("No Devices found", id="no-devices")
@@ -139,7 +142,7 @@ class BlobInput(Input):
         iclient = self.app.indiclient
         if not self.value:
             self.app.blobfolder = None
-            if iclient:
+            if not (iclient is None):
                 iclient.BLOBfolder = None
             self.clear()
             self.insert_text_at_cursor('')
@@ -149,7 +152,7 @@ class BlobInput(Input):
         blobfolder = pathlib.Path(self.value).expanduser().resolve()
         if not blobfolder.is_dir():
             self.app.blobfolder = None
-            if iclient:
+            if not (iclient is None):
                 iclient.BLOBfolder = None
             self.clear()
             self.insert_text_at_cursor('Invalid Folder')
@@ -157,7 +160,7 @@ class BlobInput(Input):
             return
 
         self.app.blobfolder = blobfolder
-        if iclient:
+        if not (iclient is None):
             iclient.BLOBfolder = blobfolder
         self.clear()
         self.insert_text_at_cursor(str(blobfolder))
@@ -207,9 +210,10 @@ class MessagesPane(Container):
         # if greater than 32, clear logs, and show the last eight
         # stored as a deque in indiclient
         log.clear()
-        messages = list(self.app.indiclient.messages)
-        mlist = reversed([ localtimestring(t) + "  " + m for t,m in messages ])
-        log.write_lines(mlist)
+        if not (self.app.indiclient is None):
+            messages = list(self.app.indiclient.messages)
+            mlist = reversed([ localtimestring(t) + "  " + m for t,m in messages ])
+            log.write_lines(mlist)
 
 
 
@@ -234,39 +238,77 @@ class ConnectionPane(Container):
         con_input = ConInput(placeholder="Host:Port", id="con-input")
         con_status = Static("Host:Port not set", id="con-status")
         con_button = Button("Connect", id="con-button")
-        if self.app.indihost and self.app.indiport:
-            con_input.disabled = True
-            con_status.update(f"Current server : {self.app.indihost}:{self.app.indiport}")
-            con_button.label = "Disconnect"
-        else:
+        if self.app.indiclient is None:
+            # No indiclient exists, enable the input field to accept a host and port
             con_input.disabled = False
-            con_status.update("Host:Port not set")
             con_button.label = "Connect"
+            if (not self.app.indihost) or (not self.app.indiport):
+                con_status.update("Host:Port not set")
+                con_button.disabled = True
+            else:
+                con_status.update(f"Current server : {self.app.indihost}:{self.app.indiport}")
+                con_button.disabled = False
+        else:
+            # An indiclient instance exists, disable the input field
+            # and set the button to 'Disconnect"
+            con_input.disabled = True
+            con_status.update(f"Current server : {self.app.indiclient.indihost}:{self.app.indiclient.indiport}")
+            con_button.label = "Disconnect"
+            con_button.disabled = False
         yield con_input
         yield con_status
         with Center():
             yield con_button
 
 
-    def on_button_pressed(self, event):
+    async def on_button_pressed(self, event):
         con_input = self.query_one("#con-input")
         con_status = self.query_one("#con-status")
         con_button = self.query_one("#con-button")
-
-        if self.app.indihost and self.app.indiport:
-            # call for disconnection
-#            CONNECTION.disconnect()
-            con_input.disabled = False
-            con_status.update("Host:Port not set")
-            con_button.label = "Connect"
-        else:
+        if self.app.indiclient is None:
             # call for connection
+            # create an indiclient
             self.app.indiclient = IClient(indihost=self.app.indihost, indiport=self.app.indiport, app=self.app)
             if self.app.blobfolder:
                 self.app.indiclient.BLOBfolder = self.app.blobfolder
             con_input.disabled = True
-            con_status.update(f"Current server : {self.app.indihost}:{self.app.indiport}")
+            con_status.update(f"Current server : {self.app.indiclient.indihost}:{self.app.indiclient.indiport}")
             con_button.label = "Disconnect"
+            con_button.disabled = False
+            # clear the messages pane
+            mess_pane = self.parent.query_one("#sys-messages-pane")
+            log = mess_pane.query_one("#system-messages")
+            log.clear()
+            # and run indiclient.asyncrun()
+            self.app.run_worker(self.app.indiclient.asyncrun(), exclusive=True)
+        else:
+            # call for disconnection
+            self.app.indiclient.shutdown()
+            # and wait for it to shutdown
+            await self.app.indiclient.stopped.wait()
+            self.app.indiclient = None
+            con_input.disabled = False
+            con_status.update("Host:Port not set")
+            con_button.label = "Connect"
+            if (not self.app.indihost) or (not self.app.indiport):
+                con_status.update("Host:Port not set")
+                con_button.disabled = True
+            else:
+                con_status.update(f"Current server : {self.app.indihost}:{self.app.indiport}")
+                con_button.disabled = False
+            # clear the list of device buttons
+            device_pane = self.parent.query_one("#device-pane")
+            if device_pane.query(".devices"):
+                device_pane.remove_children(".devices")
+                device_pane.mount(Static("No Devices found", id="no-devices"))
+            # clear the messages pane, leving a single 'DISCONNECTED' message
+            mess_pane = self.parent.query_one("#sys-messages-pane")
+            log = mess_pane.query_one("#system-messages")
+            log.clear()
+            log.write_line("DISCONNECTED")
+            # and clear all item id's
+            self.app.itemid.clear()
+
 
 
 class ConInput(Input):
@@ -294,6 +336,11 @@ class ConInput(Input):
             hostport = "localhost:7624"
         self.clear()
         self.insert_text_at_cursor(hostport)
+        # set this new host and port into self.app.indihost, self.app.indiport
+        self.app.indihost, self.app.indiport = hostport.split(":")
+        # and enable the connection button
+        con_button = self.parent.query_one("#con-button")
+        con_button.disabled = False
 
     def action_submit(self):
         self.screen.focus_next('*')
@@ -376,7 +423,7 @@ class IPyTerm(App):
 
     async def action_quit(self) -> None:
         """An action to quit the program."""
-        if self.indiclient:
+        if not (self.indiclient is None):
             self.indiclient.shutdown()
             # and wait for it to shutdown
             await self.indiclient.stopped.wait()
