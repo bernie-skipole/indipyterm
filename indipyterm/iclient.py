@@ -220,4 +220,4 @@ def run_startsc(indiclient, app, startsc, event):
 
 def run_devicesc(indiclient, app, devicesc, event):
     "handle received events affecting devicesc"
-    devicename = devicesc.devicename
+    devicename = app.itemid.devicename

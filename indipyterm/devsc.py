@@ -4,32 +4,33 @@ from textual.widgets import Footer, Static, Log, TabbedContent, TabPane
 from textual.screen import Screen
 from textual.containers import Container, VerticalScroll
 
-#from .grouppn import GroupPane
-
 from .iclient import localtimestring
 
 
 
 class GroupTabPane(TabPane):
 
-    def __init__(self, tabtitle, groupname):
+    def __init__(self, groupname, groupid):
         self.groupname = groupname
-        super().__init__(tabtitle, id=set_group_id(groupname))
+
+        super().__init__(groupname, id=groupid)
 
     def compose(self):
         "For every vector draw it"
-        snapshot = get_connection().snapshot
-        devicename = get_devicename()
-        vectors = list(vector for vector in snapshot[devicename].values() if vector.group == self.groupname and vector.enable)
+        devicename = self.app.itemid.devicename
+        device = self.app.indiclient[devicename]
+        vectors = list(vector for vector in device.values() if vector.group == self.groupname and vector.enable)
         with VerticalScroll():
             for vector in vectors:
-                yield VectorPane(vector)
+                #yield VectorPane(vector)
+                yield Static(vector.name)
 
     def add_vector(self, vector):
         "Add a vector to this tab"
         # get the VerticalScroll
         vs = self.query_one(VerticalScroll)
-        vs.mount(VectorPane(vector))
+        #vs.mount(VectorPane(vector))
+        vs.mount(Static(vector.name))
 
 
 
@@ -45,41 +46,21 @@ class GroupPane(Container):
         """
 
     def compose(self):
-        grouplist = get_devicegroups()
+
+        devicename = self.app.itemid.devicename
+        device = self.app.indiclient[devicename]
+        groupset = set(vector.group for vector in device.values() if vector.enable)
+        grouplist = list(groupset)
+        grouplist.sort()
         with TabbedContent(id="dev_groups"):
             for groupname in grouplist:
-                yield GroupTabPane(groupname, groupname=groupname)
+                groupid = self.app.itemid.set_group_id(groupname)
+                yield GroupTabPane(groupname, groupid)
 
     def add_group(self, groupname):
         tc = self.query_one('#dev_groups')
-        tc.add_pane(GroupTabPane(groupname, groupname=groupname))
-
-
-
-########
-def get_devicegroups(devicename=None):
-    "Returns a list of groups for the device"
-    if devicename is None:
-        devicename = get_devicename()
-    if not devicename:
-        return
-    connection = get_connection()
-    snapshot = connection.snapshot
-    if not snapshot:
-        return
-    if devicename not in snapshot:
-        return
-    device = snapshot[devicename]
-    groupset = set(vector.group for vector in device.values() if vector.enable)
-    if not groupset:
-        return
-    grouplist = list(groupset)
-    grouplist.sort()
-    return grouplist
-##############
-
-
-
+        groupid = self.app.itemid.set_group_id(groupname)
+        tc.add_pane(GroupTabPane(groupname, groupid))
 
 
 
@@ -98,7 +79,7 @@ class MessageLog(Log):
 
     def on_mount(self):
         self.clear()
-        devicename = self.parent.parent.devicename
+        devicename = self.app.itemid.devicename
         messages = self.app.indiclient[devicename].messages
         if messages:
             self.write_lines( reversed([ localtimestring(t) + "  " + m for t,m in messages]) )
@@ -144,11 +125,12 @@ class DeviceSc(Screen):
 
     def __init__(self, devicename):
         "set devicename in connections module"
-        self.devicename = devicename
+        self.app.itemid.devicename = devicename
         super().__init__()
 
     def compose(self) -> ComposeResult:
-        yield Static(self.devicename, id="devicename")
+        devicename = self.app.itemid.devicename
+        yield Static(devicename, id="devicename")
         yield Footer()
         yield MessagesPane(id="dev-messages-pane")
         yield GroupPane(id="dev-group-pane")
