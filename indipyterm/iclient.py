@@ -97,7 +97,7 @@ class ItemID():
         if idnumber is None:
             self._itemid += 1
             self._itemdict[self.devicename, vectorname, membername] = self._itemid
-            return "id"+str(idnumber)
+            return "id"+str(self._itemid)
         return "id"+str(idnumber)
 
 
@@ -132,6 +132,16 @@ class ItemID():
             self._itemdict[devicename, None, None] = self._itemid
             return "id"+str(self._itemid)
         return "id"+str(idnumber)
+
+
+    def clear_device(self, device):
+        "clear the id's of device, and its vectors and members"
+        self.unset(device.devicename)
+        for vectorname in device:
+            self.unset(device.devicename, vectorname)
+            membernamelist = list(device[vectorname].keys())
+            for membername in membernamelist:
+                self.unset(device.devicename, vectorname, membername)
 
 
     def get_devicename(self, deviceid):
@@ -195,6 +205,8 @@ def run_startsc(indiclient, app, startsc, event):
             messagelog = localtimestring(event.timestamp) + "  " + event.message
             messages_pane  = startsc.query_one("#sys-messages-pane")
             messages_pane.post_message(messages_pane.ShowLogs(messagelog))
-
-    
-
+        # remove the button id
+        app.itemid.unset(event.devicename)
+        # if the startsc is active, remove all id's associated with this device
+        if startsc.is_active:
+            app.itemid.clear_device(event.device)
