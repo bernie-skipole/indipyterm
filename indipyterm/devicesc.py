@@ -3,9 +3,11 @@ from textual.app import ComposeResult
 from textual.widgets import Footer, Static, Log, TabbedContent, TabPane
 from textual.screen import Screen
 from textual.containers import Container, VerticalScroll
+from textual.message import Message
 
 from .iclient import localtimestring
 
+from .vectorpn import VectorPane
 
 
 class GroupTabPane(TabPane):
@@ -22,15 +24,14 @@ class GroupTabPane(TabPane):
         vectors = list(vector for vector in device.values() if vector.group == self.groupname and vector.enable)
         with VerticalScroll():
             for vector in vectors:
-                #yield VectorPane(vector)
-                yield Static(vector.name)
+                yield VectorPane(vector)
+
 
     def add_vector(self, vector):
         "Add a vector to this tab"
         # get the VerticalScroll
         vs = self.query_one(VerticalScroll)
-        #vs.mount(VectorPane(vector))
-        vs.mount(Static(vector.name))
+        vs.mount(VectorPane(vector))
 
 
 
@@ -77,6 +78,13 @@ class MessageLog(Log):
             }
         """
 
+    class ShowLogs(Message):
+        """pass messages to the pane."""
+
+        def __init__(self, messagelog: str) -> None:
+            self.messagelog = messagelog
+            super().__init__()
+
     def on_mount(self):
         self.clear()
         devicename = self.app.itemid.devicename
@@ -85,6 +93,19 @@ class MessageLog(Log):
             self.write_lines( reversed([ localtimestring(t) + "  " + m for t,m in messages]) )
         else:
            self.write(f"Messages from {devicename} will appear here")
+
+
+    def on_message_log_show_logs(self, message: ShowLogs) -> None:
+        if self.line_count < 32:
+            self.write_line(message.messagelog)
+            return
+        # if greater than 32, clear logs, and show the last eight
+        # stored as a deque in the device
+        self.clear()
+        devicename = self.app.itemid.devicename
+        messages = self.app.indiclient[devicename].messages
+        self.write_lines( reversed([ localtimestring(t) + "  " + m for t,m in messages]) )
+
 
 
 class MessagesPane(Container):
@@ -139,6 +160,7 @@ class DeviceSc(Screen):
     def action_main(self) -> None:
         """Event handler called when m pressed."""
         self.app.indiclient.clientdata['devicesc'] = None
+        self.app.itemid.devicename = None
         self.app.pop_screen()
 
 

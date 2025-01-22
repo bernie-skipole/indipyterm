@@ -143,7 +143,6 @@ class ItemID():
             for membername in membernamelist:
                 self.unset(device.devicename, vectorname, membername)
 
-
     def get_devicename(self, deviceid):
         "Given an id, get the devicename, or return None if it does not exist"
         idnumber = int(deviceid.strip("id"))
@@ -176,6 +175,19 @@ class IClient(ipc.IPyClient):
 
         devicesc = self.clientdata.get('devicesc')
         if devicesc is None:
+            # A device screen is not currently being shown
+            return
+
+        if not event.devicename:
+            # This is a system event, handled in run_startsc
+            return
+
+        if not app.itemid.devicename:
+            # No device currently being shown
+            return
+
+        if event.devicename != app.itemid.devicename:
+            # this event refers to a device not currently being shown
             return
 
         run_devicesc(self, app, devicesc, event)
@@ -211,13 +223,29 @@ def run_startsc(indiclient, app, startsc, event):
             messagelog = localtimestring(event.timestamp) + "  " + event.message
             messages_pane  = startsc.query_one("#sys-messages-pane")
             messages_pane.post_message(messages_pane.ShowLogs(messagelog))
-        # remove the button id
-        app.itemid.unset(event.devicename)
-        # if the startsc is active, remove all id's associated with this device
-        if startsc.is_active:
-            app.itemid.clear_device(event.device)
+        # remove all id's associated with this device
+        app.itemid.clear_device(event.device)
+        # if this device is currently being shown, pop the screen
+        if app.itemid.devicename == event.devicename:
+            app.indiclient.clientdata['devicesc'] = None
+            app.itemid.devicename = None
+            app.pop_screen()
+
 
 
 def run_devicesc(indiclient, app, devicesc, event):
     "handle received events affecting devicesc"
     devicename = app.itemid.devicename
+
+    # device messages
+    if event.eventtype == "Message" and (not event.vectorname):
+        # This is a device message
+        if event.message:
+            messagelog = localtimestring(event.timestamp) + "  " + event.message
+            log = devicesc.query_one("#device-messages")
+            log.post_message(log.ShowLogs(messagelog))
+
+    if not event.vectorname:
+        return
+
+    # got to add and delete devices + properties

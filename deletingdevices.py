@@ -54,6 +54,7 @@ class Driver(ipd.IPyDriver):
                 changeswitches()
                 if device1.enable:
                     await vector1.send_setVector()
+                    await device1.send_device_message(message="vector1 switches changed")
                 if device2.enable:
                     await vector2.send_setVector()
             if device2.enable:
