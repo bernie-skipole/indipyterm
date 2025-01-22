@@ -174,6 +174,12 @@ class IClient(ipc.IPyClient):
 
         run_startsc(self, app, startsc, event)
 
+        devicesc = self.clientdata.get('devicesc')
+        if devicesc is None:
+            return
+
+        run_devicesc(self, app, devicesc, event)
+
 
 def run_startsc(indiclient, app, startsc, event):
     "handle received events affecting startsc"
@@ -210,3 +216,8 @@ def run_startsc(indiclient, app, startsc, event):
         # if the startsc is active, remove all id's associated with this device
         if startsc.is_active:
             app.itemid.clear_device(event.device)
+
+
+def run_devicesc(indiclient, app, devicesc, event):
+    "handle received events affecting devicesc"
+    devicename = devicesc.devicename

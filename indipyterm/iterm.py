@@ -11,8 +11,7 @@ from textual.message import Message
 
 from .iclient import ItemID, IClient, localtimestring
 
-
-#from .devicesc import DeviceSc
+from .devsc import DeviceSc
 
 
 
@@ -87,24 +86,26 @@ class DevicePane(Container):
         self.remove_children(f"#{deviceid}")
 
 
-#    @on(Button.Pressed, ".devices")
-#    def choose_device(self, event):
-#        "Choose device from the button pressed"
-#        devicename = devicename_from_id(event.button.id)
-#        if not devicename:
-#            return
-#        CONNECTION = get_connection()
-#        if not CONNECTION.snapshot:
-#            return
-#        if devicename not in CONNECTION.snapshot:
-#            # An unknown device
-#            return
-#        if not CONNECTION.snapshot[devicename].enable:
-#            # This device is disabled
-#            return
-
-#        CONNECTION.devicesc = DeviceSc(devicename)
-#        self.app.push_screen(CONNECTION.devicesc)
+    @on(Button.Pressed, ".devices")
+    def choose_device(self, event):
+        "Choose device from the button pressed"
+        iclient = self.app.indiclient
+        if iclient is None:
+            return
+        devicename = self.app.itemid.get_devicename(event.button.id)
+        if not devicename:
+            return
+        if devicename not in iclient:
+            # An unknown device
+            return
+        if not iclient[devicename].enable:
+            # This device is disabled
+            return
+        # create a device screen, and store a reference to it
+        # in the indiclient 'cliendata' dictionary
+        iclient.clientdata['devicesc'] = DeviceSc(devicename)
+        # push the devicesc to the top of the stack
+        self.app.push_screen(iclient.clientdata['devicesc'])
 
 
 class BlobPane(HorizontalScroll):
