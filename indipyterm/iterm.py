@@ -11,7 +11,7 @@ from textual.message import Message
 
 from .iclient import ItemID, IClient, localtimestring
 
-from .devsc import DeviceSc
+from .devicesc import DeviceSc
 
 
 

@@ -1,11 +1,66 @@
 
 from textual.app import ComposeResult
-from textual.widgets import Footer, Static, Log, TabbedContent
+from textual.widgets import Footer, Static, Log, TabbedContent, TabPane
 from textual.screen import Screen
-from textual.containers import Container
+from textual.containers import Container, VerticalScroll
 
-from .connections import set_devicename, get_devicename, get_devicemessages, clear_devicesc
-from .grouppn import GroupPane
+from .iclient import localtimestring
+
+
+
+class GroupTabPane(TabPane):
+
+    def __init__(self, groupname, groupid):
+        self.groupname = groupname
+
+        super().__init__(groupname, id=groupid)
+
+    def compose(self):
+        "For every vector draw it"
+        devicename = self.app.itemid.devicename
+        device = self.app.indiclient[devicename]
+        vectors = list(vector for vector in device.values() if vector.group == self.groupname and vector.enable)
+        with VerticalScroll():
+            for vector in vectors:
+                #yield VectorPane(vector)
+                yield Static(vector.name)
+
+    def add_vector(self, vector):
+        "Add a vector to this tab"
+        # get the VerticalScroll
+        vs = self.query_one(VerticalScroll)
+        #vs.mount(VectorPane(vector))
+        vs.mount(Static(vector.name))
+
+
+
+class GroupPane(Container):
+
+    DEFAULT_CSS = """
+
+        GroupPane {
+            width: 100%;
+            padding: 1;
+            min-height: 10;
+            }
+        """
+
+    def compose(self):
+
+        devicename = self.app.itemid.devicename
+        device = self.app.indiclient[devicename]
+        groupset = set(vector.group for vector in device.values() if vector.enable)
+        grouplist = list(groupset)
+        grouplist.sort()
+        with TabbedContent(id="dev_groups"):
+            for groupname in grouplist:
+                groupid = self.app.itemid.set_group_id(groupname)
+                yield GroupTabPane(groupname, groupid)
+
+    def add_group(self, groupname):
+        tc = self.query_one('#dev_groups')
+        groupid = self.app.itemid.set_group_id(groupname)
+        tc.add_pane(GroupTabPane(groupname, groupid))
 
 
 
@@ -24,11 +79,12 @@ class MessageLog(Log):
 
     def on_mount(self):
         self.clear()
-        mlist = get_devicemessages()
-        if mlist:
-            self.write_lines(mlist)
+        devicename = self.app.itemid.devicename
+        messages = self.app.indiclient[devicename].messages
+        if messages:
+            self.write_lines( reversed([ localtimestring(t) + "  " + m for t,m in messages]) )
         else:
-            self.write(f"Messages from {get_devicename()} will appear here")
+           self.write(f"Messages from {devicename} will appear here")
 
 
 class MessagesPane(Container):
@@ -44,10 +100,8 @@ class MessagesPane(Container):
 
 
     def compose(self) -> ComposeResult:
-        yield MessageLog(id="device-messages")
-
-    def on_mount(self):
         self.border_title = "Device Messages"
+        yield MessageLog(id="device-messages")
 
 
 
@@ -71,11 +125,11 @@ class DeviceSc(Screen):
 
     def __init__(self, devicename):
         "set devicename in connections module"
-        set_devicename(devicename)
+        self.app.itemid.devicename = devicename
         super().__init__()
 
     def compose(self) -> ComposeResult:
-        devicename = get_devicename()
+        devicename = self.app.itemid.devicename
         yield Static(devicename, id="devicename")
         yield Footer()
         yield MessagesPane(id="dev-messages-pane")
@@ -84,7 +138,7 @@ class DeviceSc(Screen):
 
     def action_main(self) -> None:
         """Event handler called when m pressed."""
-        clear_devicesc()
+        self.app.indiclient.clientdata['devicesc'] = None
         self.app.pop_screen()
 
 
