@@ -27,10 +27,6 @@ class VectorTime(Static):
 
     vtime = reactive("")
 
-    def __init__(self, vectortimestamp):
-        vectortime = localtimestring(vectortimestamp)
-        super().__init__(vectortime)
-
 
     def watch_vtime(self, vtime):
         if vtime:
@@ -47,21 +43,6 @@ class VectorState(Static):
         """
 
     vstate = reactive("")
-
-    def __init__(self, vectorstate):
-        super().__init__(vectorstate)
-        if vectorstate == "Ok":
-            self.styles.background = "darkgreen"
-            self.styles.color = "white"
-        elif vectorstate == "Alert":
-            self.styles.background = "red"
-            self.styles.color = "white"
-        elif vectorstate == "Busy":
-            self.styles.background = "yellow"
-            self.styles.color = "black"
-        elif vectorstate == "Idle":
-            self.styles.background = "black"
-            self.styles.color = "white"
 
     def watch_vstate(self, vstate):
         if vstate == "Ok":
@@ -99,15 +80,11 @@ class VectorTimeState(Widget):
     vtime = reactive("")
     vstate = reactive("")
 
-    def __init__(self, vector):
-        self.vector = vector
-        super().__init__()
-
     def compose(self):
         "Draw the timestamp and state"
         yield Static("State:")
-        yield VectorTime(self.vector.timestamp).data_bind(VectorTimeState.vtime)
-        yield VectorState(self.vector.state).data_bind(VectorTimeState.vstate)
+        yield VectorTime().data_bind(VectorTimeState.vtime)
+        yield VectorState().data_bind(VectorTimeState.vstate)
 
 
 class VectorMessage(Static):
@@ -153,7 +130,10 @@ class VectorPane(Widget):
         "Draw the vector"
         self.border_title = self.vector.label
 
-        vts = VectorTimeState(self.vector)
+        self.vtime = localtimestring(self.vector.timestamp)
+        self.vstate = self.vector.state
+
+        vts = VectorTimeState()
         vts.data_bind(VectorPane.vtime)
         vts.data_bind(VectorPane.vstate)
 
