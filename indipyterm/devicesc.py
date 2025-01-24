@@ -60,6 +60,15 @@ class GroupPane(Container):
             self.groupname = groupname
             super().__init__()
 
+    class DelVector(Message):
+        "Delete this vector"
+
+        def __init__(self, vector, vectorid):
+            self.vector = vector
+            self.vectorid = vectorid
+            super().__init__()
+
+
     def compose(self):
         "Create the widget holding tabs of groups, each grouptab will contain its vectors"
         devicename = self.app.itemid.devicename
@@ -77,6 +86,40 @@ class GroupPane(Container):
         groupid = self.app.itemid.set_group_id(groupname)
         tc = self.query_one('#dev_groups')
         tc.add_pane(GroupTabPane(groupname, groupid))
+
+
+    def on_group_pane_del_vector(self, message: DelVector) -> None:
+        vector = message.vector
+        vectorid = message.vectorid
+        vectorwidget = self.query_one(f"#{vectorid}")
+        vectorwidget.remove()
+        self.app.itemid.clear_vector(vector)
+
+
+
+
+###############
+
+
+                        # vector removed, does its group need to be removed?
+                        groupset = set(vector.group for vector in device.values() if vector.enable)
+                        # get the group of the deleted vector
+                        grp = device[item.vectorname].group
+                        if grp not in groupset:
+                            # the grp no longer has enabled contents, and must be removed
+                            grpid = get_group_id(grp)
+                            tabbedcontent = self.devicesc.query_one("#dev_groups")
+                            tabbedcontent.remove_pane(grpid)
+                            _ITEMID.unset_group(item.devicename, grp)
+
+
+
+
+
+##############
+
+
+
 
 
 

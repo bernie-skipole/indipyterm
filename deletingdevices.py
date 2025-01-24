@@ -27,6 +27,7 @@ class Driver(ipd.IPyDriver):
 
         vector1 = self['device1']['vector1']
         vector2 = self['device2']['vector2']
+        vector3 = self['device2']['vector3']
 
         switchA = vector1['switchA']
         switchB = vector1['switchB']
@@ -64,6 +65,8 @@ class Driver(ipd.IPyDriver):
                 # enable device2, and send its vector definition
                 device2.enable = True
                 await vector2.send_defVector(message='device2, vector 2 enabled')
+                await asyncio.sleep(5)
+                await vector3.send_defVector(message='device2, vector 3 enabled')
 
 
 def make_switch_driver():
@@ -96,13 +99,27 @@ def make_switch_driver():
                                 rule = "AnyOfMany",
                                 switchmembers = [switchC, switchD])
 
+    # create an input text vector with two members
+    text1 = ipd.TextMember( name = "tmember1",
+                            label = "Text 1")
+
+    text2 = ipd.TextMember( name = "tmember2",
+                            label = "Text 2")
+
+    vector3 = ipd.TextVector(name="vector3",
+                             label="Input Text",
+                             group="rw_text",
+                             perm="rw",
+                             state="Ok",
+                             textmembers=[text1, text2])
+
 
     # create devices with these vectors
     device1 = ipd.Device( devicename='device1',
                           properties=[vector1] )
 
     device2 = ipd.Device( devicename='device2',
-                          properties=[vector2] )
+                          properties=[vector2, vector3] )
 
     # start with device2 disabled
     device2.enable = False

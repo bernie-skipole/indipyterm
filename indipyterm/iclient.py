@@ -139,9 +139,19 @@ class ItemID():
         self.unset(device.devicename)
         for vectorname in device:
             self.unset(device.devicename, vectorname)
+            self.unset_group(device.devicename, device[vectorname].group)
             membernamelist = list(device[vectorname].keys())
             for membername in membernamelist:
                 self.unset(device.devicename, vectorname, membername)
+
+
+    def clear_vector(self, vector):
+        "delete the ids of the vector and all its members"
+        self.unset(vector.devicename, vector.name)
+        membernamelist = list(vector.keys())
+        for membername in membernamelist:
+            self.unset(vector.devicename, vector.name, membername)
+
 
     def get_devicename(self, deviceid):
         "Given an id, get the devicename, or return None if it does not exist"
@@ -266,6 +276,19 @@ def run_devicesc(indiclient, app, devicesc, event):
     if vectorid is None:
         return
 
+
+    elif event.eventtype == "Delete":
+        # This vector should be deleted
+        vector = indiclient[event.devicename][event.vectorname]
+        grouppane = devicesc.query_one("#dev-group-pane")
+        grouppane.post_message(grouppane.DelVector(vector, vectorid))
+        # the delete event could include a message, which cannot be displayed on the vector
+        # widget, since that will be removed, instead show it on the device message log
+        if event.message:
+            messagelog = localtimestring(event.timestamp) + "  " + event.message
+            log = devicesc.query_one("#device-messages")
+            log.post_message(log.ShowLogs(messagelog))
+        return
 
     vectorpane = devicesc.query_one(f"#{vectorid}")
 
