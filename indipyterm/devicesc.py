@@ -12,9 +12,15 @@ from .vectorpn import VectorPane
 
 class GroupTabPane(TabPane):
 
+    class AddVector(Message):
+        """pass new vector to the pane."""
+
+        def __init__(self, vector):
+            self.vector = vector
+            super().__init__()
+
     def __init__(self, groupname, groupid):
         self.groupname = groupname
-
         super().__init__(groupname, id=groupid)
 
     def compose(self):
@@ -26,10 +32,10 @@ class GroupTabPane(TabPane):
             for vector in vectors:
                 yield VectorPane(vector)
 
-
-    def add_vector(self, vector):
+    def on_group_tab_pane_add_vector(self, message: AddVector) -> None:
         "Add a vector to this tab"
-        # get the VerticalScroll
+        vector = message.vector
+        # get the VerticalScroll containing the vectors
         vs = self.query_one(VerticalScroll)
         vs.mount(VectorPane(vector))
 
@@ -46,8 +52,16 @@ class GroupPane(Container):
             }
         """
 
-    def compose(self):
 
+    class AddGroup(Message):
+        """pass new group to the pane."""
+
+        def __init__(self, groupname: str) -> None:
+            self.groupname = groupname
+            super().__init__()
+
+    def compose(self):
+        "Create the widget holding tabs of groups, each grouptab will contain its vectors"
         devicename = self.app.itemid.devicename
         device = self.app.indiclient[devicename]
         groupset = set(vector.group for vector in device.values() if vector.enable)
@@ -58,9 +72,10 @@ class GroupPane(Container):
                 groupid = self.app.itemid.set_group_id(groupname)
                 yield GroupTabPane(groupname, groupid)
 
-    def add_group(self, groupname):
-        tc = self.query_one('#dev_groups')
+    def on_group_pane_add_group(self, message: AddGroup) -> None:
+        groupname = message.groupname
         groupid = self.app.itemid.set_group_id(groupname)
+        tc = self.query_one('#dev_groups')
         tc.add_pane(GroupTabPane(groupname, groupid))
 
 

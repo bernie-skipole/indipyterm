@@ -247,13 +247,25 @@ def run_devicesc(indiclient, app, devicesc, event):
     if not event.vectorname:
         return
 
-    # note add a vector should be set here, otherwise there is no vector id
-
     vectorid = app.itemid.get_id(event.vectorname)
+
+    if (event.eventtype == "Define" or event.eventtype == "DefineBLOB"):
+        if vectorid is None:
+            # new vector, add the vector to the tab
+            vector = indiclient[event.devicename][event.vectorname]
+            grpid = app.itemid.get_group_id(vector.group)               # if grpid None, a new group has to be created
+            if grpid:
+                # The group exists
+                grouptabpane = devicesc.query_one(f"#{grpid}")
+                grouptabpane.post_message(grouptabpane.AddVector(vector))
+            else:
+                grouppane = devicesc.query_one("#dev-group-pane")
+                grouppane.post_message(grouppane.AddGroup(vector.group))
+            return
+
     if vectorid is None:
         return
 
-#    vector = indiclient[event.devicename][event.vectorname]
 
     vectorpane = devicesc.query_one(f"#{vectorid}")
 
@@ -267,9 +279,3 @@ def run_devicesc(indiclient, app, devicesc, event):
     if hasattr(event, "message"):
         if event.message:
             vectorpane.post_message(vectorpane.ShowVmessage(localtimestring(event.timestamp) + "  " + event.message))
-
-
-
-
-
-    # got to add and delete devices + properties
