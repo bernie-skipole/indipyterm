@@ -596,7 +596,7 @@ class TextDriver(ipd.IPyDriver):
                 await asyncio.sleep(3)
                 rotextvector["rotextmember1"] = tv
                 rotextvector["rotextmember2"] = tv
-                await rotextvector.send_setVector()
+                await rotextvector.send_setVector(message=f"Sent value : {tv}")
 
 
 def make_text_driver(devicename):

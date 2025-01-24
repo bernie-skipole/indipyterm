@@ -7,6 +7,7 @@ from textual.containers import Container, VerticalScroll
 from .connections import get_connection, get_devicename, get_devicegroups, set_id, get_id, sendvector, set_group_id
 
 from textual.widget import Widget
+from textual.message import Message
 
 from .iclient import localtimestring
 
@@ -120,6 +121,27 @@ class VectorPane(Widget):
     vmessage = reactive("")
 
 
+    class ShowTimestamp(Message):
+
+        def __init__(self, timestamp: str) -> None:
+            self.timestamp = timestamp
+            super().__init__()
+
+
+    class ShowState(Message):
+
+        def __init__(self, state: str) -> None:
+            self.state = state
+            super().__init__()
+
+
+    class ShowVmessage(Message):
+
+        def __init__(self, vmessage: str) -> None:
+            self.vmessage = vmessage
+            super().__init__()
+
+
     def __init__(self, vector):
         self.vector = vector
         vector_id = self.app.itemid.set_id(vector.name)
@@ -141,10 +163,9 @@ class VectorPane(Widget):
 
         # create vector message
         if self.vector.message:
-            vectormessage = localtimestring(self.vector.message_timestamp) + "  " + self.vector.message
-        else:
-            vectormessage = ""
-        yield VectorMessage(vectormessage).data_bind(VectorPane.vmessage)
+            self.vmessage = localtimestring(self.vector.message_timestamp) + "  " + self.vector.message
+
+        yield VectorMessage().data_bind(VectorPane.vmessage)
 
 #        if self.vector.vectortype == "SwitchVector":
 #            yield SwitchVector(self.vector)
@@ -156,6 +177,16 @@ class VectorPane(Widget):
 #            yield NumberVector(self.vector)
 #        elif self.vector.vectortype == "BLOBVector":
 #            yield BLOBVector(self.vector)
+
+
+    def on_vector_pane_show_timestamp(self, message: ShowTimestamp) -> None:
+        self.vtime = message.timestamp
+
+    def on_vector_pane_show_state(self, message: ShowState) -> None:
+        self.vstate = message.state
+
+    def on_vector_pane_show_vmessage(self, message: ShowVmessage) -> None:
+        self.vmessage = message.vmessage
 
 
 

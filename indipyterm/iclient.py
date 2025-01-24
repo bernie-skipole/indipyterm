@@ -238,8 +238,7 @@ def run_devicesc(indiclient, app, devicesc, event):
     devicename = app.itemid.devicename
 
     # device messages
-    if event.eventtype == "Message" and (not event.vectorname):
-        # This is a device message
+    if event.eventtype == "Message":
         if event.message:
             messagelog = localtimestring(event.timestamp) + "  " + event.message
             log = devicesc.query_one("#device-messages")
@@ -247,5 +246,30 @@ def run_devicesc(indiclient, app, devicesc, event):
 
     if not event.vectorname:
         return
+
+    # note add a vector should be set here, otherwise there is no vector id
+
+    vectorid = app.itemid.get_id(event.vectorname)
+    if vectorid is None:
+        return
+
+#    vector = indiclient[event.devicename][event.vectorname]
+
+    vectorpane = devicesc.query_one(f"#{vectorid}")
+
+    # Display vector state with timestamp
+    if hasattr(event, "state"):
+        # shows timestamp and state together
+        vectorpane.post_message(vectorpane.ShowTimestamp(localtimestring(event.timestamp)))
+        vectorpane.post_message(vectorpane.ShowState(event.state))
+
+    # Display vector message
+    if hasattr(event, "message"):
+        if event.message:
+            vectorpane.post_message(vectorpane.ShowVmessage(localtimestring(event.timestamp) + "  " + event.message))
+
+
+
+
 
     # got to add and delete devices + properties
