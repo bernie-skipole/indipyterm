@@ -66,7 +66,10 @@ class Driver(ipd.IPyDriver):
                 device2.enable = True
                 await vector2.send_defVector(message='device2, vector 2 enabled')
                 await asyncio.sleep(5)
+                vector3.enable = True
                 await vector3.send_defVector(message='device2, vector 3 enabled')
+                await asyncio.sleep(5)
+                await vector3.send_delProperty(message='device2, vector 3 disabled')
 
 
 def make_switch_driver():
