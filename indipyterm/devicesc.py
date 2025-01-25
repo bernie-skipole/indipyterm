@@ -60,6 +60,7 @@ class GroupPane(Container):
             self.groupname = groupname
             super().__init__()
 
+
     class DelVector(Message):
         "Delete this vector"
 
@@ -81,6 +82,7 @@ class GroupPane(Container):
                 groupid = self.app.itemid.set_group_id(groupname)
                 yield GroupTabPane(groupname, groupid)
 
+
     def on_group_pane_add_group(self, message: AddGroup) -> None:
         groupname = message.groupname
         groupid = self.app.itemid.set_group_id(groupname)
@@ -93,34 +95,20 @@ class GroupPane(Container):
         vectorid = message.vectorid
         vectorwidget = self.query_one(f"#{vectorid}")
         vectorwidget.remove()
+        # remove the vector id's
         self.app.itemid.clear_vector(vector)
-
-
-
-
-###############
-
-
-                        # vector removed, does its group need to be removed?
-                        groupset = set(vector.group for vector in device.values() if vector.enable)
-                        # get the group of the deleted vector
-                        grp = device[item.vectorname].group
-                        if grp not in groupset:
-                            # the grp no longer has enabled contents, and must be removed
-                            grpid = get_group_id(grp)
-                            tabbedcontent = self.devicesc.query_one("#dev_groups")
-                            tabbedcontent.remove_pane(grpid)
-                            _ITEMID.unset_group(item.devicename, grp)
-
-
-
-
-
-##############
-
-
-
-
+        # vector removed, does its group need to be removed?
+        groupset = set(v.group for v in vector.device.values() if v.enable)
+        # get the group of the deleted vector
+        grp = vector.group
+        if grp not in groupset:
+            # the grp no longer has enabled contents, and must be removed
+            grpid = self.app.itemid.get_group_id(grp)
+            if grpid is None:
+                return
+            tc = self.query_one("#dev_groups")
+            tc.remove_pane(grpid)
+            self.app.itemid.unset_group(vector.devicename, grp)
 
 
 class MessageLog(Log):

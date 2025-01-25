@@ -173,6 +173,10 @@ class IClient(ipc.IPyClient):
         app = self.clientdata['app']
         startsc = app.get_screen('startsc')
 
+        # if the connection is failed
+        # ensure the startsc is being shown
+        # and all device and vector id's are cleared
+
         if (not self.connected) and app.itemid :
             # the connection is disconnected
             if not startsc.is_active:
@@ -180,8 +184,61 @@ class IClient(ipc.IPyClient):
             device_pane = startsc.query_one("#device-pane")
             device_pane.post_message(device_pane.ClearDevices())
             app.itemid.clear()
+            self.clientdata['devicesc'] = None
 
-        run_startsc(self, app, startsc, event)
+        # handle received events affecting startsc ################################
+
+        if (event.eventtype == "Define" or event.eventtype == "DefineBLOB"):
+            # does this device have an id
+            devicename = event.devicename
+            if not app.itemid.get_devicid(devicename):
+                # it doesn't, so add a button to the devicepane of startsc
+                device_pane = startsc.query_one("#device-pane")
+                device_pane.post_message(device_pane.NewButton(devicename))
+                # As this is a new device, its devicesc cannot be currently showing,
+                # so there is no need to do anything further
+                return
+
+            # this devicename already exists, but the Define event will be
+            # adding a vector so that is still to do
+
+        if (event.eventtype == "Message") and (not event.devicename):
+            # This is a system message and should be added to the messages pane of startsc
+            if event.message:
+                messagelog = localtimestring(event.timestamp) + "  " + event.message
+                messages_pane  = startsc.query_one("#sys-messages-pane")
+                messages_pane.post_message(messages_pane.ShowLogs(messagelog))
+            # As a system message, there is no change to a devicesc, so nothing further to do
+            return
+
+        if (event.eventtype == "Delete") and (not self[event.devicename].enable):
+            # As the device has enable False, this Delete event is either requesting an entire
+            # device delete, or the last vector of this device is deleted. In either
+            # case, this entire device should be deleted
+            deviceid = app.itemid.get_devicid(event.devicename)
+            if not deviceid:
+                # This device is not displayed, nothing to do
+                return
+            # instruct the startsc to remove the device button
+            device_pane = startsc.query_one("#device-pane")
+            device_pane.post_message(device_pane.DelButton(deviceid))
+            if event.message:
+                # show this message as a system message, as there is no device
+                # so there is nowhere else to show it
+                messagelog = localtimestring(event.timestamp) + "  " + event.message
+                messages_pane  = startsc.query_one("#sys-messages-pane")
+                messages_pane.post_message(messages_pane.ShowLogs(messagelog))
+            # remove all id's associated with this device
+            app.itemid.clear_device(event.device)
+            # if this device is currently being shown, pop the screen
+            if app.itemid.devicename == event.devicename:
+                self.clientdata['devicesc'] = None
+                app.itemid.devicename = None
+                app.pop_screen()
+            return
+
+
+        # handle received events affecting devicesc ################################
 
         devicesc = self.clientdata.get('devicesc')
         if devicesc is None:
@@ -189,7 +246,7 @@ class IClient(ipc.IPyClient):
             return
 
         if not event.devicename:
-            # This is a system event, handled in run_startsc
+            # This is a system event, already handled
             return
 
         if not app.itemid.devicename:
@@ -200,105 +257,64 @@ class IClient(ipc.IPyClient):
             # this event refers to a device not currently being shown
             return
 
-        run_devicesc(self, app, devicesc, event)
+        devicename = app.itemid.devicename
+        # so this device is currently being shown on devicesc, and the event refers to this device
 
-
-def run_startsc(indiclient, app, startsc, event):
-    "handle received events affecting startsc"
-    if (event.eventtype == "Define" or event.eventtype == "DefineBLOB"):
-        # does this device have an id
-        devicename = event.devicename
-        if not app.itemid.get_devicid(devicename):
-            # it doesn't, so add a button to the devicepane
-            device_pane = startsc.query_one("#device-pane")
-            device_pane.post_message(device_pane.NewButton(devicename))
-    elif (event.eventtype == "Message") and (not event.devicename):
-        # This is a system message
-        if event.message:
-            messagelog = localtimestring(event.timestamp) + "  " + event.message
-            messages_pane  = startsc.query_one("#sys-messages-pane")
-            messages_pane.post_message(messages_pane.ShowLogs(messagelog))
-    elif (event.eventtype == "Delete") and (not indiclient[event.devicename].enable):
-        # This entire device should be deleted
-        deviceid = app.itemid.get_devicid(event.devicename)
-        if not deviceid:
-            # This device is not displayed, nothing to do
+        # device messages - must be a device message, rather than system message since devicename is given
+        if event.eventtype == "Message":
+            if event.message:
+                messagelog = localtimestring(event.timestamp) + "  " + event.message
+                log = devicesc.query_one("#device-messages")
+                log.post_message(log.ShowLogs(messagelog))
             return
-        # instruct the startsc to remove the device button
-        device_pane = startsc.query_one("#device-pane")
-        device_pane.post_message(device_pane.DelButton(deviceid))
-        if event.message:
-            # post this message as a system message, as there is no device
-            # so there is nowhere else to show it
-            messagelog = localtimestring(event.timestamp) + "  " + event.message
-            messages_pane  = startsc.query_one("#sys-messages-pane")
-            messages_pane.post_message(messages_pane.ShowLogs(messagelog))
-        # remove all id's associated with this device
-        app.itemid.clear_device(event.device)
-        # if this device is currently being shown, pop the screen
-        if app.itemid.devicename == event.devicename:
-            app.indiclient.clientdata['devicesc'] = None
-            app.itemid.devicename = None
-            app.pop_screen()
 
+        if not event.vectorname:
+            return
 
+        vectorid = app.itemid.get_id(event.vectorname)
 
-def run_devicesc(indiclient, app, devicesc, event):
-    "handle received events affecting devicesc"
-    devicename = app.itemid.devicename
+        if (event.eventtype == "Define" or event.eventtype == "DefineBLOB"):
+            if vectorid is None:
+                # new vector, add the vector to the tab
+                vector = self[devicename][event.vectorname]
+                grpid = app.itemid.get_group_id(vector.group)               # if grpid None, a new group has to be created
+                if grpid:
+                    # The group exists
+                    grouptabpane = devicesc.query_one(f"#{grpid}")
+                    grouptabpane.post_message(grouptabpane.AddVector(vector))
+                else:
+                    grouppane = devicesc.query_one("#dev-group-pane")
+                    grouppane.post_message(grouppane.AddGroup(vector.group))
+                return
 
-    # device messages
-    if event.eventtype == "Message":
-        if event.message:
-            messagelog = localtimestring(event.timestamp) + "  " + event.message
-            log = devicesc.query_one("#device-messages")
-            log.post_message(log.ShowLogs(messagelog))
-
-    if not event.vectorname:
-        return
-
-    vectorid = app.itemid.get_id(event.vectorname)
-
-    if (event.eventtype == "Define" or event.eventtype == "DefineBLOB"):
         if vectorid is None:
-            # new vector, add the vector to the tab
-            vector = indiclient[event.devicename][event.vectorname]
-            grpid = app.itemid.get_group_id(vector.group)               # if grpid None, a new group has to be created
-            if grpid:
-                # The group exists
-                grouptabpane = devicesc.query_one(f"#{grpid}")
-                grouptabpane.post_message(grouptabpane.AddVector(vector))
-            else:
-                grouppane = devicesc.query_one("#dev-group-pane")
-                grouppane.post_message(grouppane.AddGroup(vector.group))
+            # no define has been received for this vector, it is not known about
+            # should a getproperties be sent here?
             return
 
-    if vectorid is None:
-        return
+        if event.eventtype == "Delete":
+            # This vector should be deleted
+            vector = self[devicename][event.vectorname]
+            grouppane = devicesc.query_one("#dev-group-pane")
+            grouppane.post_message(grouppane.DelVector(vector, vectorid))
+            # the delete event could include a message, which cannot be displayed on the vector
+            # widget, since that will be removed, instead show it on the device message log
+            if event.message:
+                messagelog = localtimestring(event.timestamp) + "  " + event.message
+                log = devicesc.query_one("#device-messages")
+                log.post_message(log.ShowLogs(messagelog))
+            return
 
+        # so the vector is currently on display and has a vector pane. The received event may be setting new values
+        vectorpane = devicesc.query_one(f"#{vectorid}")
 
-    elif event.eventtype == "Delete":
-        # This vector should be deleted
-        vector = indiclient[event.devicename][event.vectorname]
-        grouppane = devicesc.query_one("#dev-group-pane")
-        grouppane.post_message(grouppane.DelVector(vector, vectorid))
-        # the delete event could include a message, which cannot be displayed on the vector
-        # widget, since that will be removed, instead show it on the device message log
-        if event.message:
-            messagelog = localtimestring(event.timestamp) + "  " + event.message
-            log = devicesc.query_one("#device-messages")
-            log.post_message(log.ShowLogs(messagelog))
-        return
+        # Display vector state with timestamp
+        if hasattr(event, "state"):
+            # shows timestamp and state together
+            vectorpane.post_message(vectorpane.ShowTimestamp(localtimestring(event.timestamp)))
+            vectorpane.post_message(vectorpane.ShowState(event.state))
 
-    vectorpane = devicesc.query_one(f"#{vectorid}")
-
-    # Display vector state with timestamp
-    if hasattr(event, "state"):
-        # shows timestamp and state together
-        vectorpane.post_message(vectorpane.ShowTimestamp(localtimestring(event.timestamp)))
-        vectorpane.post_message(vectorpane.ShowState(event.state))
-
-    # Display vector message
-    if hasattr(event, "message"):
-        if event.message:
-            vectorpane.post_message(vectorpane.ShowVmessage(localtimestring(event.timestamp) + "  " + event.message))
+        # Display vector message
+        if hasattr(event, "message"):
+            if event.message:
+                vectorpane.post_message(vectorpane.ShowVmessage(localtimestring(event.timestamp) + "  " + event.message))
