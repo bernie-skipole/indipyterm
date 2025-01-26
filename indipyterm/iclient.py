@@ -318,3 +318,34 @@ class IClient(ipc.IPyClient):
         if hasattr(event, "message"):
             if event.message:
                 vectorpane.post_message(vectorpane.ShowVmessage(localtimestring(event.timestamp) + "  " + event.message))
+
+        if event.eventtype == "TimeOut":
+            vectorpane.post_message(vectorpane.SubmitButtonmessage("A Timeout Error has occurred"))
+            return
+
+
+        if event.eventtype not in ("Define", "DefineBLOB", "Set", "SetBLOB"):
+            return
+
+        # Only those events with member values now handled
+
+        # For every member in the event, display its value
+
+        for membername, membervalue in event.items():
+            mpid = app.itemid.get_id(event.vectorname, membername)
+            if not mpid:
+                # This member not defined
+                continue
+            memberpane = vectorpane.query_one(f"#{mpid}")
+            if event.vector.vectortype == "SwitchVector":
+                memberpane.post_message(memberpane.SetValue(membervalue))
+
+            #if vector.vectortype == "NumberVector":
+            #    membervalue = vector.getformattedvalue(membername)
+            #if vector.vectortype == "TextVector":
+            #    if not membervalue:
+            #        memberpane.clear_text_value()
+            #if vector.vectortype == "BLOBVector":
+            #    memberpane.mvalue = vector.member(membername).filename
+            #else:
+            #    memberpane.mvalue = membervalue

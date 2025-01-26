@@ -141,11 +141,18 @@ class VectorPane(Widget):
             self.vmessage = vmessage
             super().__init__()
 
+    class SubmitButtonmessage(Message):
+
+        def __init__(self, sbmessage: str) -> None:
+            self.sbmessage = sbmessage
+            super().__init__()
+
 
     def __init__(self, vector):
+        "This VectorPane has attribute self.vector and id of the vectorid"
         self.vector = vector
-        vector_id = self.app.itemid.set_id(vector.name)
-        super().__init__(id=vector_id)
+        vectorid = self.app.itemid.set_id(vector.name)
+        super().__init__(id=vectorid)
 
 
     def compose(self):
@@ -167,8 +174,8 @@ class VectorPane(Widget):
 
         yield VectorMessage().data_bind(VectorPane.vmessage)
 
-#        if self.vector.vectortype == "SwitchVector":
-#            yield SwitchVector(self.vector)
+        if self.vector.vectortype == "SwitchVector":
+            yield SwitchVector(self.vector)
 #        elif self.vector.vectortype == "TextVector":
 #            yield TextVector(self.vector)
 #        elif self.vector.vectortype == "LightVector":
@@ -187,6 +194,13 @@ class VectorPane(Widget):
 
     def on_vector_pane_show_vmessage(self, message: ShowVmessage) -> None:
         self.vmessage = message.vmessage
+
+    def on_vector_pane_submit_buttonmessage(self, message: SubmitButtonmessage) -> None:
+        "Get the submit button status message, and update it"
+        vectorid = self.app.itemid.get_id(vector.name)
+        buttonstatus = self.query_one(f"#{vectorid}_submitmessage")
+        buttonstatus.update(message.sbmessage)
+
 
 
 
@@ -219,12 +233,18 @@ class SwitchVector(Widget):
     def compose(self):
         "Draw the switch vector members"
         members = self.vector.members()
+        # draw a switch for each vector member
         for member in members.values():
             yield SwitchMemberPane(self.vector, member)
 
+        # After the switches, for rw or wo vectors, create a submit button
+
         if self.vector.perm != "ro":
             with Container(classes="submitbutton"):
-                yield Static("", id=f"{set_id(self.vector.devicename, self.vector.name)}_submitmessage")
+                # create a static string with submit button
+                # the string will hold any buttonstatus message required on an update being
+                # submitted and will have id vectorid_submitmessage
+                yield Static("", id=f"{self.app.itemid.get_id(self.vector.name)}_submitmessage")
                 yield Button("Submit")
 
 
@@ -233,9 +253,11 @@ class SwitchVector(Widget):
         if self.vector.perm == "ro":
             # ignore switch changes for read only vectors
             return
-        buttonstatus = self.query_one(f"#{get_id(self.vector.devicename, self.vector.name)}_submitmessage")
+        # clear buttonstatus message
+        buttonstatus = self.query_one(f"#{self.app.itemid.get_id(self.vector.name)}_submitmessage")
         buttonstatus.update("")
         if self.vector.rule == "AnyOfMany":
+            # No need to enforce this
             return
         if not event.value:
             # switch turned off
@@ -250,12 +272,12 @@ class SwitchVector(Widget):
                 s.value = False
 
 
-    def on_button_pressed(self, event):
-        "Get membername:value dictionary"
+    async def on_button_pressed(self, event):
+        "Get membername:value dictionary and send it to the server"
         if self.vector.perm == "ro":
             # No submission for read only vectors
             return
-        buttonstatus = self.query_one(f"#{get_id(self.vector.devicename, self.vector.name)}_submitmessage")
+        buttonstatus = self.query_one(f"#{self.app.itemid.get_id(self.vector.name)}_submitmessage")
         switchpanes = self.query(SwitchMemberPane)
         memberdict = {}
         for sp in switchpanes:
@@ -279,8 +301,7 @@ class SwitchVector(Widget):
                 return
         # send this to the server
         buttonstatus.update("")
-        sendvector(self.vector.name, memberdict)
-
+        await self.vector.send_newSwitchVector(members=memberdict)
 
 
 

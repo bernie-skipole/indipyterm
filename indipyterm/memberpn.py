@@ -4,6 +4,8 @@ from textual.widgets import Static, Button, Input, Switch
 from textual.reactive import reactive
 from textual.containers import Container
 
+from textual.message import Message
+
 from .connections import get_connection, set_id, get_last_filename, sendBLOBfile
 
 from indipyclient import getfloat
@@ -87,12 +89,19 @@ class SwitchMemberPane(Widget):
         }
         """
 
+    class SetValue(Message):
+
+        def __init__(self, value):
+            self.value = value
+            super().__init__()
+
     mvalue = reactive("")
 
     def __init__(self, vector, member):
         self.member = member
         self.vector = vector
-        super().__init__(id=set_id(vector.devicename, vector.name, member.name))
+        member_id = self.app.itemid.set_id(vector.name, member.name)
+        super().__init__(id=member_id)
 
 
     def compose(self):
@@ -127,6 +136,9 @@ class SwitchMemberPane(Widget):
             switch.value = True
         else:
             switch.value = False
+
+    def on_switch_member_pane_set_value(self, message: SetValue) -> None:
+        self.mvalue = message.value
 
 
 class TextLabel(Static):
@@ -208,6 +220,12 @@ class TextMemberPane(Widget):
             height: auto;
             }
         """
+
+    class SetValue(Message):
+
+        def __init__(self, value):
+            self.value = value
+            super().__init__()
 
     mvalue = reactive("")
 
@@ -353,6 +371,12 @@ class LightMemberPane(Widget):
             }
         """
 
+    class SetValue(Message):
+
+        def __init__(self, value):
+            self.value = value
+            super().__init__()
+
     mvalue = reactive("")
 
     def __init__(self, vector, member):
@@ -413,6 +437,12 @@ class NumberMemberPane(Widget):
             align: center middle;
             }
         """
+
+    class SetValue(Message):
+
+        def __init__(self, value):
+            self.value = value
+            super().__init__()
 
     mvalue = reactive("")
 
@@ -554,6 +584,12 @@ class BLOBMemberPane(Widget):
             height: auto;
             }
         """
+
+    class SetValue(Message):
+
+        def __init__(self, value):
+            self.value = value
+            super().__init__()
 
     mvalue = reactive("")
 
