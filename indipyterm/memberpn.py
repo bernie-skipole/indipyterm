@@ -317,6 +317,7 @@ class LightValue(Static):
 
     mvalue = reactive("")
 
+
     def __init__(self, lightval):
         super().__init__(lightval)
         if lightval == "Ok":
@@ -331,6 +332,7 @@ class LightValue(Static):
         elif lightval == "Idle":
             self.styles.background = "black"
             self.styles.color = "white"
+
 
     def watch_mvalue(self, mvalue):
         if mvalue:
@@ -382,14 +384,22 @@ class LightMemberPane(Widget):
     def __init__(self, vector, member):
         self.member = member
         self.vector = vector
-        super().__init__(id=set_id(vector.devicename, vector.name, member.name))
+        member_id = self.app.itemid.set_id(vector.name, member.name)
+        super().__init__(id=member_id)
 
 
     def compose(self):
         "Draw the member"
+
+        if self.member.membervalue:
+            self.mvalue = self.member.membervalue
+
         yield LightLabel(self.member.label)
         with Container():
             yield LightValue(self.member.membervalue).data_bind(LightMemberPane.mvalue)
+
+    def on_light_member_pane_set_value(self, message: SetValue) -> None:
+        self.mvalue = message.value
 
 
 class NumberLabel(Static):

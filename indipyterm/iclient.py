@@ -339,6 +339,8 @@ class IClient(ipc.IPyClient):
             memberpane = vectorpane.query_one(f"#{mpid}")
             if event.vector.vectortype == "SwitchVector":
                 memberpane.post_message(memberpane.SetValue(membervalue))
+            elif event.vector.vectortype == "LightVector":
+                memberpane.post_message(memberpane.SetValue(membervalue))
 
             #if vector.vectortype == "NumberVector":
             #    membervalue = vector.getformattedvalue(membername)

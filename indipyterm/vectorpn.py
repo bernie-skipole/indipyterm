@@ -176,10 +176,14 @@ class VectorPane(Widget):
 
         if self.vector.vectortype == "SwitchVector":
             yield SwitchVector(self.vector)
+        elif self.vector.vectortype == "LightVector":
+            yield LightVector(self.vector)
+
+
+
 #        elif self.vector.vectortype == "TextVector":
 #            yield TextVector(self.vector)
-#        elif self.vector.vectortype == "LightVector":
-#            yield LightVector(self.vector)
+
 #        elif self.vector.vectortype == "NumberVector":
 #            yield NumberVector(self.vector)
 #        elif self.vector.vectortype == "BLOBVector":
