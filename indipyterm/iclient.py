@@ -344,15 +344,11 @@ class IClient(ipc.IPyClient):
             elif event.vector.vectortype == "TextVector":
                 memberpane.post_message(memberpane.SetValue(membervalue))
             elif event.vector.vectortype == "NumberVector":
+                # display a formatted number string rather than the received number
                 fvalue = event.vector.getformattedvalue(membername)
                 memberpane.post_message(memberpane.SetValue(fvalue))
-
-
-
-            #if vector.vectortype == "NumberVector":
-            #    membervalue = vector.getformattedvalue(membername)
-
-            #if vector.vectortype == "BLOBVector":
-            #    memberpane.mvalue = vector.member(membername).filename
-            #else:
-            #    memberpane.mvalue = membervalue
+            elif event.vector.vectortype == "BLOBVector":
+                # display the received filename rather than the binary blob received
+                # the vector.member() method returns the member given its name
+                fvalue = event.vector.member(membername).filename
+                memberpane.post_message(memberpane.SetValue(fvalue))

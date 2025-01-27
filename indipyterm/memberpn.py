@@ -3,18 +3,13 @@
 from textual.widgets import Static, Button, Input, Switch
 from textual.reactive import reactive
 from textual.containers import Container
-
 from textual.message import Message
-
-from .connections import get_connection, set_id, get_last_filename, sendBLOBfile
-
-from indipyclient import getfloat
-
 from textual.widget import Widget
-
 from textual.css.query import NoMatches
 
 from decimal import Decimal
+
+from indipyclient import getfloat
 
 from .filechooser import ChooseFileSc
 
@@ -546,12 +541,10 @@ class BLOBTxValue(Static):
         """
 
 
-
-
-class BLOBMemberPane(Widget):
+class BlobMemberPane(Widget):
 
     DEFAULT_CSS = """
-        BLOBMemberPane {
+        BlobMemberPane {
             layout: horizontal;
             background: $panel;
             margin-left: 1;
@@ -559,7 +552,7 @@ class BLOBMemberPane(Widget):
             height: auto;
             }
 
-        BLOBMemberPane > Container {
+        BlobMemberPane > Container {
             layout: vertical;
             background: $panel;
             width: 2fr;
@@ -584,23 +577,24 @@ class BLOBMemberPane(Widget):
     def __init__(self, vector, member):
         self.member = member
         self.vector = vector
-        super().__init__(id=set_id(vector.devicename, vector.name, member.name))
+        member_id = self.app.itemid.set_id(vector.name, member.name)
+        super().__init__(id=member_id)
 
 
     def compose(self):
         "Draw the member"
         yield BLOBLabel(self.member.label)
-        CONNECTION = get_connection()
-        last_filename = get_last_filename(self.vector.name, self.member.name)
+        # The last filename sent is stored in the member user string
+        last_filename = self.member.user_string
         with Container():
             if self.vector.perm == "wo":
-                yield BLOBRxValue("RX data: N/A -- Write only --").data_bind(BLOBMemberPane.mvalue)
-            elif not CONNECTION.blobfolderpath:
-                yield BLOBRxValue("RX data: -- BLOB Folder not set --").data_bind(BLOBMemberPane.mvalue)
+                yield BLOBRxValue("RX data: N/A -- Write only --").data_bind(BlobMemberPane.mvalue)
+            elif not self.app.blobfolder:
+                yield BLOBRxValue("RX data: -- BLOB Folder not set --").data_bind(BlobMemberPane.mvalue)
             elif not self.member.filename:
-                yield BLOBRxValue("RX data: -- Nothing yet received --").data_bind(BLOBMemberPane.mvalue)
+                yield BLOBRxValue("RX data: -- Nothing yet received --").data_bind(BlobMemberPane.mvalue)
             else:
-                yield BLOBRxValue(f"RX data: {self.member.filename}").data_bind(BLOBMemberPane.mvalue)
+                yield BLOBRxValue(f"RX data: {self.member.filename}").data_bind(BlobMemberPane.mvalue)
             if self.vector.perm == "ro":
                 yield BLOBTxValue("TX data: N/A -- Read only --")
             elif last_filename:
@@ -611,11 +605,17 @@ class BLOBMemberPane(Widget):
                 yield Button("Send File")
 
 
-    def on_button_pressed(self, event):
+    def on_blob_member_pane_set_value(self, message: SetValue) -> None:
+        self.mvalue = message.value
+
+
+    async def on_button_pressed(self, event):
         "Open file chooser screen"
-        def send_path(path):
+        async def send_path(path):
             if path is not None:
-                sendBLOBfile(self.vector.name, self.member.name, path)
+                # memberdict of {membername:(value, blobsize, blobformat)}
+                await self.vector.send_newBLOBVector(members={self.member.name:(path, 0, "")})
+                self.member.user_string = path.name
                 path_text = self.query_one(BLOBTxValue)
                 path_text.update(f"TX data: {path.name}")
         self.app.push_screen(ChooseFileSc(), send_path)

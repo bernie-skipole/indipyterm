@@ -31,9 +31,11 @@ The package help is:
     Terminal client to communicate to an INDI service.
 
     options:
-      -h, --help   show this help message and exit
-      --port PORT  Port of the INDI server (default 7624).
-      --host HOST  Hostname/IP of the INDI server (default localhost).
+      -h, --help               show this help message and exit
+      --port PORT              Port of the INDI server (default 7624).
+      --host HOST              Hostname/IP of the INDI server (default localhost).
+      --blobfolder BLOBFOLDER  Optional folder where BLOB's will be saved.
+
       --version    show program's version number and exit
 
 If you have a tool such as pipx or uv, then indipyterm can be installed into a virtual environment and run with a single command:

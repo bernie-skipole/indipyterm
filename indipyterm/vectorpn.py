@@ -8,7 +8,7 @@ from textual.message import Message
 
 from .iclient import localtimestring
 
-from .memberpn import SwitchMemberPane, TextMemberPane, LightMemberPane, NumberMemberPane, BLOBMemberPane, NumberInputField, TextInputField
+from .memberpn import SwitchMemberPane, TextMemberPane, LightMemberPane, NumberMemberPane, BlobMemberPane, NumberInputField, TextInputField
 
 
 
@@ -179,8 +179,8 @@ class VectorPane(Widget):
             yield TextVector(self.vector)
         elif self.vector.vectortype == "NumberVector":
             yield NumberVector(self.vector)
-#        elif self.vector.vectortype == "BLOBVector":
-#            yield BLOBVector(self.vector)
+        elif self.vector.vectortype == "BLOBVector":
+            yield BLOBVector(self.vector)
 
 
     def on_vector_pane_show_timestamp(self, message: ShowTimestamp) -> None:
@@ -453,4 +453,4 @@ class BLOBVector(Widget):
         "Draw the BLOB vector"
         members = self.vector.members()
         for member in members.values():
-            yield BLOBMemberPane(self.vector, member)
+            yield BlobMemberPane(self.vector, member)
