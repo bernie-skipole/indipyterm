@@ -341,6 +341,8 @@ class IClient(ipc.IPyClient):
                 memberpane.post_message(memberpane.SetValue(membervalue))
             elif event.vector.vectortype == "LightVector":
                 memberpane.post_message(memberpane.SetValue(membervalue))
+            elif event.vector.vectortype == "TextVector":
+                memberpane.post_message(memberpane.SetValue(membervalue))
 
             #if vector.vectortype == "NumberVector":
             #    membervalue = vector.getformattedvalue(membername)

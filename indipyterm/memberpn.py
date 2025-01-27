@@ -223,12 +223,11 @@ class TextMemberPane(Widget):
             self.value = value
             super().__init__()
 
-    mvalue = reactive("")
-
     def __init__(self, vector, member):
         self.member = member
         self.vector = vector
-        super().__init__(id=set_id(vector.devicename, vector.name, member.name))
+        member_id = self.app.itemid.set_id(vector.name, member.name)
+        super().__init__(id=member_id)
 
 
     def compose(self):
@@ -241,16 +240,9 @@ class TextMemberPane(Widget):
         yield ShowText(self.member)
 
 
-    def clear_text_value(self):
+    def on_text_member_pane_set_value(self, message: SetValue) -> None:
         showtextvalue = self.query_one(TextValue)
-        showtextvalue.update("")
-        self.mvalue = ""
-
-    def watch_mvalue(self, mvalue):
-        if mvalue:
-            showtextvalue = self.query_one(TextValue)
-            showtextvalue.update(mvalue)
-
+        showtextvalue.update(message.value)
 
     def on_button_pressed(self, event):
         "Clear text input field"

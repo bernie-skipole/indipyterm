@@ -178,11 +178,8 @@ class VectorPane(Widget):
             yield SwitchVector(self.vector)
         elif self.vector.vectortype == "LightVector":
             yield LightVector(self.vector)
-
-
-
-#        elif self.vector.vectortype == "TextVector":
-#            yield TextVector(self.vector)
+        elif self.vector.vectortype == "TextVector":
+            yield TextVector(self.vector)
 
 #        elif self.vector.vectortype == "NumberVector":
 #            yield NumberVector(self.vector)
@@ -344,15 +341,15 @@ class TextVector(Widget):
 
         if self.vector.perm != "ro":
             with Container(classes="submitbutton"):
-                yield Static("", id=f"{set_id(self.vector.devicename, self.vector.name)}_submitmessage")
+                yield Static("", id=f"{self.app.itemid.get_id(self.vector.name)}_submitmessage")
                 yield Button("Submit")
 
-    def on_button_pressed(self, event):
+    async def on_button_pressed(self, event):
         "Get membername:value dictionary"
         if self.vector.perm == "ro":
             # No submission for read only vectors
             return
-        buttonstatus = self.query_one(f"#{get_id(self.vector.devicename, self.vector.name)}_submitmessage")
+        buttonstatus = self.query_one(f"#{self.app.itemid.get_id(self.vector.name)}_submitmessage")
         textpanes = self.query(TextMemberPane)
         memberdict = {}
         for tp in textpanes:
@@ -363,7 +360,8 @@ class TextVector(Widget):
             memberdict[membername] = textfield.value
         # send this to the server
         buttonstatus.update("")
-        sendvector(self.vector.name, memberdict)
+        await self.vector.send_newTextVector(members=memberdict)
+
 
 
 class LightVector(Widget):
