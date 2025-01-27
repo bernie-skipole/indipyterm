@@ -38,14 +38,6 @@ The package help is:
 
       --version    show program's version number and exit
 
-If you have a tool such as pipx or uv, then indipyterm can be installed into a virtual environment and run with a single command:
-
-pipx run indipyterm
-
-or
-
-uvx indipyterm
-
 A typical session would look like:
 
 ![Terminal screenshot](https://github.com/bernie-skipole/indipyterm/raw/main/indipyterm1.png)
