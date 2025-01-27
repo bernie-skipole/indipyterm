@@ -431,13 +431,15 @@ class NumberMemberPane(Widget):
     def __init__(self, vector, member):
         self.member = member
         self.vector = vector
-        super().__init__(id=set_id(vector.devicename, vector.name, member.name))
+        member_id = self.app.itemid.set_id(vector.name, member.name)
+        super().__init__(id=member_id)
 
 
     def compose(self):
         "Draw the member"
+        self.mvalue = self.member.membervalue
         yield NumberLabel(self.member.label)
-        yield NumberValue(self.member.membervalue).data_bind(NumberMemberPane.mvalue)
+        yield NumberValue().data_bind(NumberMemberPane.mvalue)
         if self.vector.perm != "ro":
             with Container():
                 yield NumberInputField(self.member, placeholder="Input new number")
@@ -448,6 +450,10 @@ class NumberMemberPane(Widget):
         infld = self.query_one(NumberInputField)
         infld.clear()
         event.stop()
+
+    def on_number_member_pane_set_value(self, message: SetValue) -> None:
+        self.mvalue = message.value
+
 
 
 class NumberInputField(Input):

@@ -343,12 +343,15 @@ class IClient(ipc.IPyClient):
                 memberpane.post_message(memberpane.SetValue(membervalue))
             elif event.vector.vectortype == "TextVector":
                 memberpane.post_message(memberpane.SetValue(membervalue))
+            elif event.vector.vectortype == "NumberVector":
+                fvalue = event.vector.getformattedvalue(membername)
+                memberpane.post_message(memberpane.SetValue(fvalue))
+
+
 
             #if vector.vectortype == "NumberVector":
             #    membervalue = vector.getformattedvalue(membername)
-            #if vector.vectortype == "TextVector":
-            #    if not membervalue:
-            #        memberpane.clear_text_value()
+
             #if vector.vectortype == "BLOBVector":
             #    memberpane.mvalue = vector.member(membername).filename
             #else:

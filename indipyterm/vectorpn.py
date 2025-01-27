@@ -3,9 +3,6 @@
 from textual.widgets import Static, Button, Switch
 from textual.reactive import reactive
 from textual.containers import Container, VerticalScroll
-
-from .connections import get_connection, get_devicename, get_devicegroups, set_id, get_id, sendvector, set_group_id
-
 from textual.widget import Widget
 from textual.message import Message
 
@@ -180,9 +177,8 @@ class VectorPane(Widget):
             yield LightVector(self.vector)
         elif self.vector.vectortype == "TextVector":
             yield TextVector(self.vector)
-
-#        elif self.vector.vectortype == "NumberVector":
-#            yield NumberVector(self.vector)
+        elif self.vector.vectortype == "NumberVector":
+            yield NumberVector(self.vector)
 #        elif self.vector.vectortype == "BLOBVector":
 #            yield BLOBVector(self.vector)
 
@@ -418,15 +414,15 @@ class NumberVector(Widget):
 
         if self.vector.perm != "ro":
             with Container(classes="submitbutton"):
-                yield Static("", id=f"{set_id(self.vector.devicename, self.vector.name)}_submitmessage")
+                yield Static("", id=f"{self.app.itemid.get_id(self.vector.name)}_submitmessage")
                 yield Button("Submit")
 
-    def on_button_pressed(self, event):
+    async def on_button_pressed(self, event):
         "Get membername:value dictionary"
         if self.vector.perm == "ro":
             # No submission for read only vectors
             return
-        buttonstatus = self.query_one(f"#{get_id(self.vector.devicename, self.vector.name)}_submitmessage")
+        buttonstatus = self.query_one(f"#{self.app.itemid.get_id(self.vector.name)}_submitmessage")
         numberpanes = self.query(NumberMemberPane)
         memberdict = {}
         for np in numberpanes:
@@ -437,7 +433,8 @@ class NumberVector(Widget):
             memberdict[membername] = numberfield.value
         # send this to the server
         buttonstatus.update("")
-        sendvector(self.vector.name, memberdict)
+        await self.vector.send_newNumberVector(members=memberdict)
+
 
 
 class BLOBVector(Widget):
