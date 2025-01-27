@@ -43,18 +43,6 @@ class SwitchValue(Static):
 
     mvalue = reactive("")
 
-    def __init__(self, switchval):
-        super().__init__(switchval)
-        if switchval == "On":
-            self.styles.background = "darkgreen"
-            self.styles.color = "white"
-        elif switchval == "Off":
-            self.styles.background = "red"
-            self.styles.color = "white"
-        else:
-            self.styles.background = "black"
-            self.styles.color = "white"
-
     def watch_mvalue(self, mvalue):
         if mvalue:
             if mvalue == "On":
@@ -106,9 +94,12 @@ class SwitchMemberPane(Widget):
 
     def compose(self):
         "Draw the member"
+        if self.member.membervalue:
+            self.mvalue = self.member.membervalue
+
         yield SwitchLabel(self.member.label)
         with Container():
-            yield SwitchValue(self.member.membervalue).data_bind(SwitchMemberPane.mvalue)
+            yield SwitchValue().data_bind(SwitchMemberPane.mvalue)
         with Container():
             if self.member.membervalue == "On":
                 if self.vector.perm == "ro":
@@ -122,6 +113,11 @@ class SwitchMemberPane(Widget):
                     yield Switch(value=False)
 
     def watch_mvalue(self, mvalue):
+        "Alter switches as values received"
+        # The displayed SwitchValue will automatically follow mvalue
+        # so does not have to be set here.
+        # However the switch objects are set here as values are received
+        # from iclient
         if self.vector.perm != "ro":
             return
         # Only bother changing switch states if ro
@@ -318,22 +314,6 @@ class LightValue(Static):
     mvalue = reactive("")
 
 
-    def __init__(self, lightval):
-        super().__init__(lightval)
-        if lightval == "Ok":
-            self.styles.background = "darkgreen"
-            self.styles.color = "white"
-        elif lightval == "Alert":
-            self.styles.background = "red"
-            self.styles.color = "white"
-        elif lightval == "Busy":
-            self.styles.background = "yellow"
-            self.styles.color = "black"
-        elif lightval == "Idle":
-            self.styles.background = "black"
-            self.styles.color = "white"
-
-
     def watch_mvalue(self, mvalue):
         if mvalue:
             if mvalue == "Ok":
@@ -396,7 +376,7 @@ class LightMemberPane(Widget):
 
         yield LightLabel(self.member.label)
         with Container():
-            yield LightValue(self.member.membervalue).data_bind(LightMemberPane.mvalue)
+            yield LightValue().data_bind(LightMemberPane.mvalue)
 
     def on_light_member_pane_set_value(self, message: SetValue) -> None:
         self.mvalue = message.value
