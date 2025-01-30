@@ -194,7 +194,12 @@ class VectorPane(Widget):
 
     def on_vector_pane_submit_buttonmessage(self, message: SubmitButtonmessage) -> None:
         "Get the submit button status message, and update it"
-        vectorid = self.app.itemid.get_id(vector.name)
+        if self.vector.vectortype == "BLOBVector":
+            # BLOB vectors do not have a submit button, so set message
+            # in vector message space
+            self.vmessage = message.sbmessage
+            return
+        vectorid = self.app.itemid.get_id(self.vector.name)
         buttonstatus = self.query_one(f"#{vectorid}_submitmessage")
         buttonstatus.update(message.sbmessage)
 
@@ -298,6 +303,8 @@ class SwitchVector(Widget):
                 return
         # send this to the server
         buttonstatus.update("")
+        # set state to busy
+        self.parent.vstate = "Busy"
         await self.vector.send_newSwitchVector(members=memberdict)
 
 
@@ -356,6 +363,8 @@ class TextVector(Widget):
             memberdict[membername] = textfield.value
         # send this to the server
         buttonstatus.update("")
+        # set state to busy
+        self.parent.vstate = "Busy"
         await self.vector.send_newTextVector(members=memberdict)
 
 
@@ -433,6 +442,8 @@ class NumberVector(Widget):
             memberdict[membername] = numberfield.value
         # send this to the server
         buttonstatus.update("")
+        # set state to busy
+        self.parent.vstate = "Busy"
         await self.vector.send_newNumberVector(members=memberdict)
 
 

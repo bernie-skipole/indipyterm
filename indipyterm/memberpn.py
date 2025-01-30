@@ -618,5 +618,7 @@ class BlobMemberPane(Widget):
                 self.member.user_string = path.name
                 path_text = self.query_one(BLOBTxValue)
                 path_text.update(f"TX data: {path.name}")
+                # set state to busy
+                self.parent.parent.vstate = "Busy"
         self.app.push_screen(ChooseFileSc(), send_path)
         event.stop()

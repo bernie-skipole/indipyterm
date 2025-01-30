@@ -321,6 +321,9 @@ class IClient(ipc.IPyClient):
 
         if event.eventtype == "TimeOut":
             vectorpane.post_message(vectorpane.SubmitButtonmessage("A Timeout Error has occurred"))
+            if vectorpane.vstate == "Busy":
+                vectorpane.post_message(vectorpane.ShowTimestamp(localtimestring(event.timestamp)))
+                vectorpane.post_message(vectorpane.ShowState("Alert"))
             return
 
 
