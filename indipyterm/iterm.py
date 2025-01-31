@@ -418,8 +418,9 @@ class IPyTerm(App):
     def on_mount(self) -> None:
         """Start the worker which runs self.indiclient.asyncrun()
            and show the start screen"""
-        self.run_worker(self.indiclient.asyncrun(), exclusive=True)
         self.push_screen('startsc')
+        self.run_worker(self.indiclient.asyncrun(), exclusive=True)
+
 
 
     async def action_quit(self) -> None:
