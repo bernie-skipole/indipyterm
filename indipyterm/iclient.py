@@ -206,7 +206,7 @@ class IClient(ipc.IPyClient):
             # This is a system message and should be added to the messages pane of startsc
             if event.message:
                 messagelog = localtimestring(event.timestamp) + "  " + event.message
-                messages_pane  = app.query_one("#sys-messages-pane")
+                messages_pane  = startsc.query_one("#sys-messages-pane")
                 messages_pane.post_message(messages_pane.ShowLogs(messagelog))
             # As a system message, there is no change to a devicesc, so nothing further to do
             return

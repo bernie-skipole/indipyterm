@@ -13,6 +13,8 @@ from .iclient import ItemID, IClient, localtimestring
 
 from .devicesc import DeviceSc
 
+from . import version
+
 
 
 class DevicePane(Container):
@@ -379,7 +381,7 @@ class StartSc(Screen):
 
 
     def compose(self) -> ComposeResult:
-        yield Static("INDI Terminal", id="title")
+        yield Static(f"INDI Terminal {version}", id="title")
         yield Footer()
         with VerticalScroll(id="startsc-grid"):
             yield DevicePane(id="device-pane")
