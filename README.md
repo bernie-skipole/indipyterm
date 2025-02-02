@@ -16,7 +16,7 @@ INDI - Instrument Neutral Distributed Interface.
 
 See https://en.wikipedia.org/wiki/Instrument_Neutral_Distributed_Interface
 
-The client can be run with
+The client can be run from a virtual environment with
 
 indipyterm [options]
 
