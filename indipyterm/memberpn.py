@@ -432,7 +432,7 @@ class NumberMemberPane(Widget):
 
     def compose(self):
         "Draw the member"
-        self.mvalue = self.member.membervalue
+        self.mvalue = self.member.getformattedvalue()
         yield NumberLabel(self.member.label)
         yield NumberValue().data_bind(NumberMemberPane.mvalue)
         if self.vector.perm != "ro":

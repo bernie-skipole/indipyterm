@@ -16,6 +16,8 @@ INDI - Instrument Neutral Distributed Interface.
 
 See https://en.wikipedia.org/wiki/Instrument_Neutral_Distributed_Interface
 
+The INDI protocol defines the format of the data sent, such as light, number, text, switch or BLOB (Binary Large Object). The client is general purpose, taking the format of switches, numbers etc., from the protocol.
+
 The client can be run from a virtual environment with
 
 indipyterm [options]
@@ -45,9 +47,6 @@ A typical session would look like:
 and showing one device:
 
 ![Terminal screenshot](https://github.com/bernie-skipole/indipyterm/raw/main/indipyterm2.png)
-
-
-The INDI protocol defines the format of the data sent, such as light, number, text, switch or BLOB (Binary Large Object). The client is general purpose, taking the format of switches, numbers etc., from the protocol.
 
 The package can be installed from:
 
