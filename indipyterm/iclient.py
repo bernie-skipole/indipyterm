@@ -196,7 +196,8 @@ class IClient(ipc.IPyClient):
                 device_pane = startsc.query_one("#device-pane")
                 device_pane.post_message(device_pane.NewButton(devicename))
                 # As this is a new device, its devicesc cannot be currently showing,
-                # so there is no need to do anything further
+                # but a message can be added to the device, which will appear on devicesc
+                event.device.messages.appendleft( (event.timestamp, f"Device discovered: {devicename}") )
                 return
 
             # this devicename already exists, but the Define event will be
