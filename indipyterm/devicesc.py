@@ -111,49 +111,6 @@ class GroupPane(Container):
             self.app.itemid.unset_group(vector.devicename, grp)
 
 
-class MessageLog(Log):
-
-    DEFAULT_CSS = """
-
-        MessageLog {
-            width: 100%;
-            height: 100%;
-            background: $panel;
-            scrollbar-background: $panel;
-            scrollbar-corner-color: $panel;
-            }
-        """
-
-    class ShowLogs(Message):
-        """pass messages to the pane."""
-
-        def __init__(self, messagelog: str) -> None:
-            self.messagelog = messagelog
-            super().__init__()
-
-    def on_mount(self):
-        self.clear()
-        devicename = self.app.itemid.devicename
-        messages = self.app.indiclient[devicename].messages
-        if messages:
-            self.write_lines( reversed([ localtimestring(t) + "  " + m for t,m in messages]) )
-        else:
-           self.write(f"Messages from {devicename} will appear here")
-
-
-    def on_message_log_show_logs(self, message: ShowLogs) -> None:
-        if self.line_count < 32:
-            self.write_line(message.messagelog)
-            return
-        # if greater than 32, clear logs, and show the last eight
-        # stored as a deque in the device
-        self.clear()
-        devicename = self.app.itemid.devicename
-        messages = self.app.indiclient[devicename].messages
-        self.write_lines( reversed([ localtimestring(t) + "  " + m for t,m in messages]) )
-
-
-
 class MessagesPane(Container):
 
     DEFAULT_CSS = """
@@ -163,12 +120,51 @@ class MessagesPane(Container):
             background: $panel;
             border: mediumvioletred;
            }
+
+        MessagePane > Log {
+            width: 100%;
+            height: 100%;
+            background: $panel;
+            scrollbar-background: $panel;
+            scrollbar-corner-color: $panel;
+            }
+
         """
 
+    class ShowLogs(Message):
+        """pass messages to the pane."""
+
+        def __init__(self, messagelog: str) -> None:
+            self.messagelog = messagelog
+            super().__init__()
 
     def compose(self) -> ComposeResult:
         self.border_title = "Device Messages"
-        yield MessageLog(id="device-messages")
+        yield Log()
+
+
+    def on_mount(self):
+        log = self.query_one("Log")
+        devicename = self.app.itemid.devicename
+        messages = self.app.indiclient[devicename].messages
+        if messages:
+            log.write_lines( reversed([ localtimestring(t) + "  " + m for t,m in messages]) )
+        else:
+            log.write(f"Messages from {devicename} will appear here")
+
+    def on_messages_pane_show_logs(self, message: ShowLogs) -> None:
+        log = self.query_one("Log")
+        if log.line_count < 32:
+            log.write_line(message.messagelog)
+            return
+        # if greater than 32, clear logs, and show the last eight
+        # stored as a deque in indiclient[devicename]
+        devicename = self.app.itemid.devicename
+        log.clear()
+        if not (self.app.indiclient is None):
+            messages = list(self.app.indiclient[devicename].messages)
+            mlist = reversed([ localtimestring(t) + "  " + m for t,m in messages ])
+            log.write_lines(mlist)
 
 
 

@@ -265,7 +265,7 @@ class IClient(ipc.IPyClient):
         if event.eventtype == "Message":
             if event.message:
                 messagelog = localtimestring(event.timestamp) + "  " + event.message
-                log = devicesc.query_one("#device-messages")
+                log = devicesc.query_one('#dev-messages-pane')
                 log.post_message(log.ShowLogs(messagelog))
             return
 
@@ -302,7 +302,7 @@ class IClient(ipc.IPyClient):
             # widget, since that will be removed, instead show it on the device message log
             if event.message:
                 messagelog = localtimestring(event.timestamp) + "  " + event.message
-                log = devicesc.query_one("#device-messages")
+                log = devicesc.query_one("#dev-messages-pane")
                 log.post_message(log.ShowLogs(messagelog))
             return
 
