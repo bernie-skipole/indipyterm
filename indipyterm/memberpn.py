@@ -14,124 +14,6 @@ from indipyclient import getfloat
 from .filechooser import ChooseFileSc
 
 
-
-class SwitchLabel(Static):
-
-    DEFAULT_CSS = """
-        SwitchLabel {
-            width: 1fr;
-            height: 3;
-            content-align: center middle;
-        }
-        """
-
-
-class SwitchValue(Static):
-
-    DEFAULT_CSS = """
-        SwitchValue {
-            width: auto;
-            padding: 1;
-            height: auto;
-            }
-        """
-
-    mvalue = reactive("")
-
-    def watch_mvalue(self, mvalue):
-        if mvalue:
-            if mvalue == "On":
-                self.styles.background = "darkgreen"
-                self.styles.color = "white"
-            elif mvalue == "Off":
-                self.styles.background = "red"
-                self.styles.color = "white"
-            else:
-                mvalue = "?"
-                self.styles.background = "black"
-                self.styles.color = "white"
-            self.update(mvalue)
-
-
-
-class SwitchMemberPane(Widget):
-
-    DEFAULT_CSS = """
-        SwitchMemberPane {
-            layout: horizontal;
-            background: $panel;
-            margin-left: 1;
-            margin-bottom: 1;
-            height: auto;
-        }
-
-        SwitchMemberPane > Container {
-            width: 1fr;
-            height: auto;
-            align: center middle;
-        }
-        """
-
-    class SetValue(Message):
-
-        def __init__(self, value):
-            self.value = value
-            super().__init__()
-
-    mvalue = reactive("")
-
-    def __init__(self, vector, member):
-        self.member = member
-        self.vector = vector
-        member_id = self.app.itemid.set_id(vector.name, member.name)
-        super().__init__(id=member_id)
-
-
-    def compose(self):
-        "Draw the member"
-        if self.member.membervalue:
-            self.mvalue = self.member.membervalue
-
-        yield SwitchLabel(self.member.label)
-        with Container():
-            yield SwitchValue().data_bind(SwitchMemberPane.mvalue)
-        with Container():
-            if self.member.membervalue == "On":
-                if self.vector.perm == "ro":
-                    yield Switch(value=True, disabled=True)
-                else:
-                    yield Switch(value=True)
-            else:
-                if self.vector.perm == "ro":
-                    yield Switch(value=False, disabled=True)
-                else:
-                    yield Switch(value=False)
-
-    def watch_mvalue(self, mvalue):
-        "Alter switches as values received"
-        # The displayed SwitchValue will automatically follow mvalue
-        # so does not have to be set here.
-        # However the switch objects are set here as values are received
-        # from iclient
-        if self.vector.perm != "ro":
-            return
-        # Only bother changing switch states if ro
-        if not  mvalue:
-            return
-        try:
-            switch = self.query_one(Switch)
-        except NoMatches:
-            # presumably this vector has not been displayed yet
-            return
-        if mvalue == "On":
-            switch.value = True
-        else:
-            switch.value = False
-
-    def on_switch_member_pane_set_value(self, message: SetValue) -> None:
-        self.mvalue = message.value
-
-
 class TextLabel(Static):
 
     DEFAULT_CSS = """
@@ -622,3 +504,124 @@ class BlobMemberPane(Widget):
                 self.parent.parent.vstate = "Busy"
         self.app.push_screen(ChooseFileSc(), send_path)
         event.stop()
+
+
+
+class SwitchLabel(Static):
+
+    DEFAULT_CSS = """
+        SwitchLabel {
+            width: 1fr;
+            height: 3;
+            content-align: center middle;
+        }
+        """
+
+
+class SwitchValue(Static):
+
+    DEFAULT_CSS = """
+        SwitchValue {
+            width: auto;
+            padding: 1;
+            height: auto;
+            }
+        """
+
+    mvalue = reactive("")
+
+    def watch_mvalue(self, mvalue):
+        if mvalue:
+            if mvalue == "On":
+                self.styles.background = "darkgreen"
+                self.styles.color = "white"
+            elif mvalue == "Off":
+                self.styles.background = "red"
+                self.styles.color = "white"
+            else:
+                mvalue = "?"
+                self.styles.background = "black"
+                self.styles.color = "white"
+            self.update(mvalue)
+
+
+
+class SwitchMemberPane(Widget):
+
+    DEFAULT_CSS = """
+        SwitchMemberPane {
+            layout: horizontal;
+            background: $panel;
+            margin-left: 1;
+            margin-bottom: 1;
+            height: auto;
+        }
+
+        SwitchMemberPane > Container {
+            width: 1fr;
+            height: auto;
+            align: center middle;
+        }
+        """
+
+    class SetValue(Message):
+
+        def __init__(self, value):
+            self.value = value
+            super().__init__()
+
+    mvalue = reactive("")
+
+    def __init__(self, vector, member):
+        self.member = member
+        self.vector = vector
+        member_id = self.app.itemid.set_id(vector.name, member.name)
+        super().__init__(id=member_id)
+
+
+    def compose(self):
+        "Draw the member"
+        if self.member.membervalue:
+            self.mvalue = self.member.membervalue
+
+        yield SwitchLabel(self.member.label)
+        with Container():
+            yield SwitchValue().data_bind(SwitchMemberPane.mvalue)
+        with Container():
+            if self.member.membervalue == "On":
+                if self.vector.perm == "ro":
+                    yield Switch(value=True, disabled=True)
+                else:
+                    yield Switch(value=True)
+            else:
+                if self.vector.perm == "ro":
+                    yield Switch(value=False, disabled=True)
+                else:
+                    yield Switch(value=False)
+
+    def watch_mvalue(self, mvalue):
+        "Alter switches as values received"
+        # The displayed SwitchValue will automatically follow mvalue
+        # so does not have to be set here.
+        # However the switch objects are set here as values are received
+        # from iclient
+        if self.vector.perm != "ro":
+            return
+        # Only bother changing switch states if ro
+        if not  mvalue:
+            return
+        try:
+            switch = self.query_one(Switch)
+        except NoMatches:
+            # presumably this vector has not been displayed yet
+            return
+        if mvalue == "On":
+            switch.value = True
+        else:
+            switch.value = False
+
+    def on_switch_member_pane_set_value(self, message: SetValue) -> None:
+        self.mvalue = message.value
+
+
+
