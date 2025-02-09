@@ -6,6 +6,9 @@ from . import version
 from .iterm import IPyTerm
 
 
+if sys.version_info < (3, 10):
+    raise ImportError('indipyterm requires Python >= 3.10')
+
 
 def main():
     """The commandline entry point to run the terminal client."""
