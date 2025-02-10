@@ -363,6 +363,7 @@ class RadioVector(Widget):
                         yield RadioButton(f"{member.label} :green_circle:", value=True)
                     else:
                         yield RadioButton(member.label)
+                        
 
         # After the switches, for rw or wo vectors, create a submit button
 
