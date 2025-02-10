@@ -1,6 +1,6 @@
 
 
-from textual.widgets import Static, Button, Switch
+from textual.widgets import Static, Button, Switch, RadioButton, RadioSet
 from textual.reactive import reactive
 from textual.containers import Container, VerticalScroll
 from textual.widget import Widget
@@ -171,7 +171,9 @@ class VectorPane(Widget):
 
         yield VectorMessage().data_bind(VectorPane.vmessage)
 
-        if self.vector.vectortype == "SwitchVector":
+        if self.vector.vectortype == "SwitchVector" and self.vector.rule == "OneOfMany":
+            yield RadioVector(self.vector)
+        elif self.vector.vectortype == "SwitchVector":
             yield SwitchVector(self.vector)
         elif self.vector.vectortype == "LightVector":
             yield LightVector(self.vector)
@@ -306,6 +308,97 @@ class SwitchVector(Widget):
         # set state to busy
         self.parent.vstate = "Busy"
         await self.vector.send_newSwitchVector(members=memberdict)
+
+
+class RadioVector(Widget):
+
+    DEFAULT_CSS = """
+        RadioVector {
+            height: auto;
+            }
+        RadioVector > .radiocontainer {
+            layout: horizontal;
+            align: center middle;
+            height: auto;
+            margin: 1;
+            }
+        RadioVector > .radiocontainer > RadioSet {
+            background: $panel;
+            }
+
+        RadioVector > .submitbutton {
+            layout: horizontal;
+            align: right middle;
+            height: auto;
+            }
+        RadioVector > .submitbutton > Button {
+            margin-right: 1;
+            width: auto;
+            }
+        RadioVector > .submitbutton > Static {
+            margin-right: 4;
+            width: auto;
+            }
+
+        """
+
+    class ResetValue(Message):
+        pass
+
+    # this boolean value is toggled to initiate a recompose
+    mvalue = reactive(False, recompose=True)
+
+    def __init__(self, vector):
+        self.vector = vector
+        super().__init__()
+
+    def compose(self):
+        "Draw the radio buttons"
+        members = self.vector.members()
+        # draw a radio button for each vector member
+        with Container(classes="radiocontainer"):
+            with RadioSet():
+                for member in members.values():
+                    if member.membervalue == "On":
+                        yield RadioButton(f"{member.label} :green_circle:", value=True)
+                    else:
+                        yield RadioButton(member.label)
+
+        # After the switches, for rw or wo vectors, create a submit button
+
+        if self.vector.perm != "ro":
+            with Container(classes="submitbutton"):
+                # create a static string with submit button
+                # the string will hold any buttonstatus message required on an update being
+                # submitted and will have id vectorid_submitmessage
+                yield Static("", id=f"{self.app.itemid.get_id(self.vector.name)}_submitmessage")
+                yield Button("Submit")
+
+
+    async def on_button_pressed(self, event):
+        "Get membername:value dictionary and send it to the server"
+        if self.vector.perm == "ro":
+            # No submission for read only vectors
+            return
+        buttonstatus = self.query_one(f"#{self.app.itemid.get_id(self.vector.name)}_submitmessage")
+        radiobtns = self.query_one(RadioSet)
+        pressed_index = radiobtns.pressed_index
+        memberdict = {}
+        members = self.vector.members()
+        for idx, membername in enumerate(members.keys()):
+            if idx == pressed_index:
+                memberdict[membername] = "On"
+            else:
+                memberdict[membername] = "Off"
+        # send this to the server
+        buttonstatus.update("")
+        # set state to busy
+        self.parent.vstate = "Busy"
+        await self.vector.send_newSwitchVector(members=memberdict)
+
+    def on_radio_vector_reset_value(self, message: ResetValue) -> None:
+        # Toggle mvalue to cause a recompose of this RadioVector
+        self.mvalue = not self.mvalue
 
 
 
