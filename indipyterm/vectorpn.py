@@ -325,7 +325,6 @@ class RadioVector(Widget):
         RadioVector > .radiocontainer > RadioSet {
             background: $panel;
             }
-
         RadioVector > .submitbutton {
             layout: horizontal;
             align: right middle;
@@ -339,7 +338,9 @@ class RadioVector(Widget):
             margin-right: 4;
             width: auto;
             }
-
+        RadioButton {
+            margin: 1;
+            }
         """
 
     class ResetValue(Message):
@@ -363,7 +364,7 @@ class RadioVector(Widget):
                         yield RadioButton(f"{member.label} :green_circle:", value=True)
                     else:
                         yield RadioButton(member.label)
-                        
+
 
         # After the switches, for rw or wo vectors, create a submit button
 
