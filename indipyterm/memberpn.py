@@ -1,6 +1,6 @@
 
 
-from textual.widgets import Static, Button, Input, Switch
+from textual.widgets import Static, Button, Input, Switch, RadioButton, RadioSet
 from textual.reactive import reactive
 from textual.containers import Container
 from textual.message import Message
@@ -624,4 +624,37 @@ class SwitchMemberPane(Widget):
         self.mvalue = message.value
 
 
+class RadioMembers(Container):
 
+    DEFAULT_CSS = """
+        RadioMembers > RadioSet {
+            background: $panel;
+            }
+        RadioMembers > RadioSet > RadioButton {
+            margin: 1;
+            }
+        """
+
+    class ResetValue(Message):
+        pass
+
+
+    # this boolean value is toggled to initiate a recompose
+    mvalue = reactive(False, recompose=True)
+
+    def __init__(self, members):
+        self.members = members
+        super().__init__()
+
+    def compose(self):
+        "Draw the radio buttons"
+        with RadioSet():
+            for member in self.members.values():
+                if member.membervalue == "On":
+                    yield RadioButton(f"{member.label} :green_circle:", value=True)
+                else:
+                    yield RadioButton(member.label)
+
+    def on_radio_members_reset_value(self, message: ResetValue) -> None:
+        # Toggle mvalue to cause a recompose of the RadioMembers
+        self.mvalue = not self.mvalue

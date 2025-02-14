@@ -8,7 +8,7 @@ from textual.message import Message
 
 from .iclient import localtimestring
 
-from .memberpn import SwitchMemberPane, TextMemberPane, LightMemberPane, NumberMemberPane, BlobMemberPane, NumberInputField, TextInputField
+from .memberpn import SwitchMemberPane, TextMemberPane, LightMemberPane, NumberMemberPane, BlobMemberPane, NumberInputField, TextInputField, RadioMembers
 
 
 
@@ -316,14 +316,11 @@ class RadioVector(Widget):
         RadioVector {
             height: auto;
             }
-        RadioVector > .radiocontainer {
+        RadioVector > RadioMembers {
             layout: horizontal;
             align: center middle;
             height: auto;
             margin: 1;
-            }
-        RadioVector > .radiocontainer > RadioSet {
-            background: $panel;
             }
         RadioVector > .submitbutton {
             layout: horizontal;
@@ -338,16 +335,8 @@ class RadioVector(Widget):
             margin-right: 4;
             width: auto;
             }
-        RadioButton {
-            margin: 1;
-            }
         """
 
-    class ResetValue(Message):
-        pass
-
-    # this boolean value is toggled to initiate a recompose
-    mvalue = reactive(False, recompose=True)
 
     def __init__(self, vector):
         self.vector = vector
@@ -355,16 +344,8 @@ class RadioVector(Widget):
 
     def compose(self):
         "Draw the radio buttons"
-        members = self.vector.members()
         # draw a radio button for each vector member
-        with Container(classes="radiocontainer"):
-            with RadioSet():
-                for member in members.values():
-                    if member.membervalue == "On":
-                        yield RadioButton(f"{member.label} :green_circle:", value=True)
-                    else:
-                        yield RadioButton(member.label)
-
+        yield RadioMembers( self.vector.members() )
 
         # After the switches, for rw or wo vectors, create a submit button
 
@@ -397,10 +378,6 @@ class RadioVector(Widget):
         # set state to busy
         self.parent.vstate = "Busy"
         await self.vector.send_newSwitchVector(members=memberdict)
-
-    def on_radio_vector_reset_value(self, message: ResetValue) -> None:
-        # Toggle mvalue to cause a recompose of this RadioVector
-        self.mvalue = not self.mvalue
 
 
 

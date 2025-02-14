@@ -336,10 +336,10 @@ class IClient(ipc.IPyClient):
         if event.vector.vectortype == "SwitchVector" and event.vector.rule == "OneOfMany":
             # this is treated differently from the others as each member has not been
             # drawn in its own memberpane, rather all the members are drawn in a special
-            # radiovector holding a textual radioset.
-            # whenever a change is received, ask for this radiovector to be recomposed
-            radiovector = vectorpane.query_one("RadioVector")
-            radiovector.post_message(radiovector.ResetValue())
+            # radiomembers container holding a textual radioset.
+            # whenever a change is received, ask for this radiomembers to be recomposed
+            radiomembers = vectorpane.query_one("RadioMembers")
+            radiomembers.post_message(radiomembers.ResetValue())
             return
 
 
