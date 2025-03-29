@@ -10,6 +10,10 @@ It can be installed from Pypi with:
 
 pip install indipyterm
 
+or if you use uv, it can be loaded and run with:
+
+uvx indipyterm
+
 indipydriver and indipyterm communicate with the INDI protocol.
 
 INDI - Instrument Neutral Distributed Interface.
