@@ -1,8 +1,8 @@
 
 
-from textual.widgets import Static, Button, Switch, RadioButton, RadioSet
+from textual.widgets import Static, Button, Switch, RadioSet
 from textual.reactive import reactive
-from textual.containers import Container, VerticalScroll
+from textual.containers import Container
 from textual.widget import Widget
 from textual.message import Message
 

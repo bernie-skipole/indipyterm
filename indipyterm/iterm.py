@@ -145,7 +145,7 @@ class BlobInput(Input):
         iclient = self.app.indiclient
         if not self.value:
             self.app.blobfolder = None
-            if not (iclient is None):
+            if iclient is not None:
                 iclient.BLOBfolder = None
             self.clear()
             self.insert_text_at_cursor('')
@@ -155,7 +155,7 @@ class BlobInput(Input):
         blobfolder = pathlib.Path(self.value).expanduser().resolve()
         if not blobfolder.is_dir():
             self.app.blobfolder = None
-            if not (iclient is None):
+            if iclient is not None:
                 iclient.BLOBfolder = None
             self.clear()
             self.insert_text_at_cursor('Invalid Folder')
@@ -163,7 +163,7 @@ class BlobInput(Input):
             return
 
         self.app.blobfolder = blobfolder
-        if not (iclient is None):
+        if iclient is not None:
             iclient.BLOBfolder = blobfolder
         self.clear()
         self.insert_text_at_cursor(str(blobfolder))
@@ -213,7 +213,7 @@ class MessagesPane(Container):
         # if greater than 32, clear logs, and show the last eight
         # stored as a deque in indiclient
         log.clear()
-        if not (self.app.indiclient is None):
+        if self.app.indiclient is not None:
             messages = list(self.app.indiclient.messages)
             mlist = reversed([ localtimestring(t) + "  " + m for t,m in messages ])
             log.write_lines(mlist)
@@ -427,7 +427,7 @@ class IPyTerm(App):
 
     async def action_quit(self) -> None:
         """An action to quit the program."""
-        if not (self.indiclient is None):
+        if self.indiclient is not None:
             self.indiclient.shutdown()
             # and wait for it to shutdown
             await self.indiclient.stopped.wait()

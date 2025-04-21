@@ -161,7 +161,7 @@ class MessagesPane(Container):
         # stored as a deque in indiclient[devicename]
         devicename = self.app.itemid.devicename
         log.clear()
-        if not (self.app.indiclient is None):
+        if self.app.indiclient is not None:
             messages = list(self.app.indiclient[devicename].messages)
             mlist = reversed([ localtimestring(t) + "  " + m for t,m in messages ])
             log.write_lines(mlist)

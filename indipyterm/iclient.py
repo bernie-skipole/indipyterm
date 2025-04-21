@@ -1,7 +1,5 @@
 
-import asyncio, logging
-
-from datetime import datetime, timezone
+import logging
 
 import indipyclient as ipc
 
