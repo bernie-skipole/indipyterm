@@ -2,8 +2,7 @@
 
 import sys, argparse, pathlib
 
-from . import version
-from .iterm import IPyTerm
+from .iterm import IPyTerm, version
 
 
 if sys.version_info < (3, 10):

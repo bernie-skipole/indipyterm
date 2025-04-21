@@ -1,3 +1,4 @@
 
+from .iterm import IPyTerm, version
 
-version = "0.1.0"
+__all__ = ["IPyTerm", "version"]

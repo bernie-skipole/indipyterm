@@ -64,6 +64,19 @@ textual - a library used to generate terminal interfaces.
 
 Plus other packages which textual calls upon.
 
+If indipyterm is imported, rather than run as shown above, then only two items are available:
+
+indipyterm.version
+
+indipyterm.IPyTerm
+
+To run IPyTerm:
+
+    app = IPyTerm(host="localhost", port=7624, blobfolder=None)
+    app.run()
+
+The app.run() call will block, and the terminal client will run.
+
 The indipydriver package which can be used to create instrument control, and serve the INDI protocol is available at:
 
 https://pypi.org/project/indipydriver

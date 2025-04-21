@@ -13,7 +13,7 @@ from .iclient import ItemID, IClient, localtimestring
 
 from .devicesc import DeviceSc
 
-from . import version
+version = "0.1.1"
 
 
 
