@@ -1,4 +1,4 @@
-
+from rich.text import Text
 
 from textual.widgets import Static, Button, Input, Switch, RadioButton, RadioSet
 from textual.reactive import reactive
@@ -651,7 +651,8 @@ class RadioMembers(Container):
         with RadioSet():
             for member in self.members.values():
                 if member.membervalue == "On":
-                    yield RadioButton(f"{member.label} :green_circle:", value=True)
+                    chosenlabel = Text.from_markup(f"{member.label} :green_circle:")
+                    yield RadioButton(chosenlabel, value=True)
                 else:
                     yield RadioButton(member.label)
 
