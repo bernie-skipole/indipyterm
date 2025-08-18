@@ -6,7 +6,7 @@ from textual import on
 from textual.app import ComposeResult
 from textual.widgets import Footer, Static, Button, Log, Input
 from textual.screen import Screen
-from textual.containers import Container, HorizontalScroll, VerticalScroll, Center
+from textual.containers import Container, HorizontalScroll, VerticalScroll, Center, Horizontal
 from textual.message import Message
 
 from .iclient import ItemID, IClient, localtimestring
@@ -17,13 +17,12 @@ version = "0.1.2"
 
 
 
-class DevicePane(Container):
+class DevicePane(VerticalScroll):
 
     DEFAULT_CSS = """
 
             DevicePane {
-                width: 100%;
-                row-span: 2;
+                width: 30%;
                 background: $panel;
                 border: dodgerblue;
                 }
@@ -115,9 +114,17 @@ class BlobPane(HorizontalScroll):
     DEFAULT_CSS = """
 
         BlobPane {
+            height: 40%;
+            min-height: 8;
             background: $panel;
             border: greenyellow;
             }
+
+        BlobPane > #blob-input {
+            margin: 1;
+            }
+
+
         """
 
     def compose(self):
@@ -181,7 +188,6 @@ class MessagesPane(Container):
 
         MessagesPane {
             width: 100%;
-            column-span: 2;
             background: $panel;
             border: mediumvioletred;
             }
@@ -225,6 +231,8 @@ class ConnectionPane(Container):
     DEFAULT_CSS = """
 
         ConnectionPane {
+            height: 60%;
+            min-height: 12;
             background: $panel;
             border: mediumvioletred;
             align: center middle;
@@ -357,6 +365,7 @@ class StartSc(Screen):
 
     DEFAULT_CSS = """
 
+
         StartSc > #title {
            background: $primary;
            color: $text;
@@ -365,15 +374,15 @@ class StartSc(Screen):
            }
 
         StartSc > #startsc-grid {
-            height: 100%;
-            min-height: 24;
-            layout: grid;
-            grid-size: 2 3;  /* two columns, three rows */
-            grid-columns: 1fr 2fr;
-            grid-rows: 2fr 1fr 1fr;
+            height: 70%;
             }
-        """
 
+        StartSc > #sys-messages-pane {
+            height: 30%;
+           }
+
+
+        """
     ENABLE_COMMAND_PALETTE = False
 
     def __init__(self):
@@ -382,12 +391,13 @@ class StartSc(Screen):
 
     def compose(self) -> ComposeResult:
         yield Static(f"INDI Terminal {version}", id="title")
-        yield Footer()
-        with VerticalScroll(id="startsc-grid"):
+        with Horizontal(id="startsc-grid"):
             yield DevicePane(id="device-pane")
-            yield ConnectionPane(id="con-pane")
-            yield BlobPane(id="blob-pane")
-            yield MessagesPane(id="sys-messages-pane")
+            with VerticalScroll(id="startsc-v"):
+                yield ConnectionPane(id="con-pane")
+                yield BlobPane(id="blob-pane")
+        yield MessagesPane(id="sys-messages-pane")
+        yield Footer()
 
 
 class IPyTerm(App):
