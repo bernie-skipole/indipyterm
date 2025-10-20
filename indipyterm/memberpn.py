@@ -7,8 +7,6 @@ from textual.message import Message
 from textual.widget import Widget
 from textual.css.query import NoMatches
 
-from decimal import Decimal
-
 from indipyclient import getfloat
 
 from .filechooser import ChooseFileSc
@@ -361,9 +359,7 @@ class NumberInputField(Input):
         stepvalue = getfloat(self.member.step)
         minvalue = getfloat(self.member.min)
         if stepvalue:
-            stepvalue = Decimal(str(stepvalue))
-            difference = newfloat - minvalue
-            newfloat = minvalue + float(int(Decimal(str(difference)) / stepvalue) * stepvalue)
+            newfloat = round(newfloat / stepvalue) * stepvalue
         # check not less than minimum
         if newfloat < minvalue:
             # reset input to be the minimum, and accept this
