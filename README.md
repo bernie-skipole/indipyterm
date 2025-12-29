@@ -53,6 +53,8 @@ This terminal should work with any INDI service, however associated packages by 
 
 ## indipyserver
 
+A Python INDI server, serves INDI drivers on a port.
+
 https://github.com/bernie-skipole/indipyserver
 
 https://pypi.org/project/indipyserver/
@@ -61,8 +63,19 @@ https://indipyserver.readthedocs.io
 
 ## indipydriver
 
+Package with classes used to create INDI drivers.
+
 https://github.com/bernie-skipole/indipydriver
 
 https://pypi.org/project/indipydriver
 
 https://indipydriver.readthedocs.io
+
+## indipyweb
+
+Web server and INDI client, connects to an INDI serving port, and serves client pages for connected browsers.
+
+https://github.com/bernie-skipole/indipyweb
+
+https://pypi.org/project/indipyweb
+

@@ -13,7 +13,7 @@ from .iclient import ItemID, IClient, localtimestring
 
 from .devicesc import DeviceSc
 
-version = "0.1.4"
+version = "0.1.5"
 
 
 
@@ -287,7 +287,7 @@ class ConnectionPane(Container):
             con_button.label = "Disconnect"
             con_button.disabled = False
             # clear the messages pane
-            mess_pane = self.parent.query_one("#sys-messages-pane")
+            mess_pane = self.parent.parent.parent.query_one("#sys-messages-pane")
             log = mess_pane.query_one("#system-messages")
             log.clear()
             # and run indiclient.asyncrun()
@@ -308,12 +308,12 @@ class ConnectionPane(Container):
                 con_status.update(f"Current server : {self.app.indihost}:{self.app.indiport}")
                 con_button.disabled = False
             # clear the list of device buttons
-            device_pane = self.parent.query_one("#device-pane")
+            device_pane = self.parent.parent.query_one("#device-pane")
             if device_pane.query(".devices"):
                 device_pane.remove_children(".devices")
                 device_pane.mount(Static("No Devices found", id="no-devices"))
             # clear the messages pane, leving a single 'DISCONNECTED' message
-            mess_pane = self.parent.query_one("#sys-messages-pane")
+            mess_pane = self.parent.parent.parent.query_one("#sys-messages-pane")
             log = mess_pane.query_one("#system-messages")
             log.clear()
             log.write_line("DISCONNECTED")
