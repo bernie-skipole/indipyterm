@@ -13,7 +13,7 @@ from .iclient import ItemID, IClient, localtimestring
 
 from .devicesc import DeviceSc
 
-version = "0.1.5"
+version = "0.1.6"
 
 
 
@@ -73,9 +73,12 @@ class DevicePane(VerticalScroll):
 
     def on_device_pane_new_button(self, message: NewButton) -> None:
         devicename = message.devicename
-        deviceid = self.app.itemid.set_devicid(devicename)
-        self.remove_children("#no-devices")
-        self.mount(Button(devicename, variant="primary", classes="devices", id=deviceid))
+        deviceid = self.app.itemid.get_devicid(devicename)
+        if deviceid is None:
+            deviceid = self.app.itemid.set_devicid(devicename)
+            self.remove_children("#no-devices")
+            self.mount(Button(devicename, variant="primary", classes="devices", id=deviceid))
+
 
     def on_device_pane_clear_devices(self, message: ClearDevices) -> None:
         if self.query(".devices"):
