@@ -190,7 +190,9 @@ class IClient(ipc.IPyClient):
             # does this device have an id
             devicename = event.devicename
             if not app.itemid.get_devicid(devicename):
-                # it doesn't, so add a button to the devicepane of startsc
+                # it doesn't, so give it an id
+                app.itemid.set_devicid(devicename)
+                # add a button to the devicepane of startsc
                 device_pane = startsc.query_one("#device-pane")
                 device_pane.post_message(device_pane.NewButton(devicename))
                 # As this is a new device, its devicesc cannot be currently showing,
