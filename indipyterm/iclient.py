@@ -284,6 +284,7 @@ class IClient(ipc.IPyClient):
                     grouptabpane = devicesc.query_one(f"#{grpid}")
                     grouptabpane.post_message(grouptabpane.AddVector(vector))
                 else:
+                    app.itemid.set_group_id(vector.group)
                     grouppane = devicesc.query_one("#dev-group-pane")
                     grouppane.post_message(grouppane.AddGroup(vector.group))
                 return

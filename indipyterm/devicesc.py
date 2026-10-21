@@ -85,7 +85,7 @@ class GroupPane(Container):
 
     def on_group_pane_add_group(self, message: AddGroup) -> None:
         groupname = message.groupname
-        groupid = self.app.itemid.set_group_id(groupname)
+        groupid = self.app.itemid.get_group_id(groupname)
         tc = self.query_one('#dev_groups')
         tc.add_pane(GroupTabPane(groupname, groupid))
 
